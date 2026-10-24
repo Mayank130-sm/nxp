@@ -105,6 +105,8 @@ Per-claim confidence (0-100), computed in `backend/app/grade.py`; weights live i
 - Drug-name matching uses a synonym list; unusual abbreviations are missed.
 - The 100-sentence gold set (`data/labels/gold_sentences.csv`) was labelled by Claude, an AI, not by an independent human annotator. Treat the extraction metrics as a sanity check and replace the labels with human ones before quoting them as a result. Species/design precision is low by construction (the gold labels only what the sentence states; the pipeline falls back to the paper's dominant animal species).
 - Markdown formatting characters are stripped before quote checking, so a quote is verified against the formatting-stripped text.
+- TinyFish Agent trial lookups (ClinicalTrials.gov) returned lists for most drugs but not all: sildenafil timed out twice and has none. Absence of trials in the app means "not retrieved", not "no trials exist".
+- Hosting: the Vercel temporary deployments expire; deploy `frontend/` with your own Vercel account (`vercel.json` is set) or run `make dev`.
 
 ## Honesty statement
 
