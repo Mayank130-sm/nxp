@@ -67,7 +67,7 @@ make setup                      # venv, pip, npm install
 python scripts/smoke_tinyfish.py   # one real search, fetch and agent goal
 python scripts/smoke_ollama.py
 python scripts/run_pipeline.py     # ingest -> extract -> agents -> build (resumable, Ctrl-C safe)
-make dev                        # API :8000 + UI :5173
+make dev                        # same as: python scripts/dev.py  (API :8000 + UI :5173, Ctrl-C stops both)
 make test                       # pytest
 ```
 

@@ -7,9 +7,9 @@ setup:
 	$(PY) -m pip install -r backend/requirements.txt
 	cd frontend && npm install
 
-# one command: API on :8000 and Vite on :5173 (API url wired via VITE_API_URL)
+# one command (cross-platform): API on :8000 and Vite on :5173, UI wired to the API
 dev:
-	$(PY) -m uvicorn app.main:app --app-dir backend --port 8000 & cd frontend && VITE_API_URL=http://localhost:8000 npm run dev
+	$(PY) scripts/dev.py
 
 api:
 	$(PY) -m uvicorn app.main:app --app-dir backend --port 8000 --reload
