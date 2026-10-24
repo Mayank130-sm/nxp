@@ -19,7 +19,7 @@ cd frontend; npm install; cd ..
 
 ## 2. Run the app
 
-The repo already contains the data (`data/neurorx.db` and the exported JSON), so you can start here with no keys.
+On a fresh clone there is no database, only the exported JSON in `frontend/public/data/`. So start with the UI-only command below, which needs no keys. `dev.py` starts the API too, but the API has nothing to serve until you run the pipeline (step 4) to create `data/neurorx.db`. On the machine that already ran the pipeline, `dev.py` works as is.
 
 ```powershell
 .venv\Scripts\python scripts/dev.py
@@ -72,7 +72,7 @@ Run `vercel` from the repo root, because the Vercel project's root directory is 
 
 ## How the database works
 
-The database is a single SQLite file, `data/neurorx.db`. The code is in `backend/app/db.py`, and the path is set by `DB_PATH` in `backend/app/config.py`. It is committed to the repo, so the app runs without re-running the pipeline.
+The database is a single SQLite file, `data/neurorx.db`. The code is in `backend/app/db.py`, and the path is set by `DB_PATH` in `backend/app/config.py`. It is gitignored (`data/*.db*`), so it is **not** in the repo: it exists only on the machine that ran the pipeline. A fresh clone gets the exported JSON instead, and has to run the pipeline to rebuild the database.
 
 | Table | Holds |
 |---|---|
@@ -116,7 +116,7 @@ What the client adds around each call:
 
 PubMed does not go through TinyFish. `backend/app/pubmed.py` calls NCBI directly for the abstracts. TinyFish adds full text and the Agent lookups on top.
 
-The logs under `data/` and the cache are gitignored. Only the database and the exported JSON are committed.
+The logs under `data/` and the cache are gitignored. The database is gitignored too. Only the exported JSON (`frontend/public/data/`, `data/graph.json`), the seed list and the gold labels are committed.
 
 ## Troubleshooting
 
