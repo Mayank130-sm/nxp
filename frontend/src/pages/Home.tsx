@@ -1,26 +1,16 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight, Search, SlidersHorizontal } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchDrugs, fetchStats, useAsync, type DrugSummary } from '../api'
+import { Hero, Insights, Marquee, Overview } from '../landing'
 import {
-  Badge, ConfidenceBadge, ConflictBadge, CountUp, Disclaimer, Empty, ErrorBox, EvidenceChip, Reveal, SafetyBadge,
+  Badge, ConfidenceBadge, ConflictBadge, Disclaimer, Empty, ErrorBox, EvidenceChip, SafetyBadge,
   ScoreRing, Skeleton, pretty, useDebounced,
 } from '../ui'
 
 type Filter = 'all' | 'pro' | 'safety' | 'conflict'
 type Sort = 'score' | 'evidence' | 'name'
-
-function Tile({ label, value, delay }: { label: string; value: number | undefined; delay: number }) {
-  return (
-    <Reveal delay={delay}>
-      <div className="card px-5 py-4">
-        <p className="caps">{label}</p>
-        <p className="mt-1 font-serif text-4xl">{value === undefined ? <Skeleton className="h-10 w-20" /> : <CountUp value={value} />}</p>
-      </div>
-    </Reveal>
-  )
-}
 
 function DrugCard({ d, i }: { d: DrugSummary; i: number }) {
   const scored = d.n_claims > 0
@@ -61,6 +51,7 @@ export default function Home() {
   const [design, setDesign] = useState('')
   const [species, setSpecies] = useState('')
   const [showAll, setShowAll] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
   const dq = useDebounced(q)
 
   const options = useMemo(() => {
@@ -98,38 +89,21 @@ export default function Home() {
 
   return (
     <main>
-      <section className="noise relative overflow-hidden border-b border-white/[0.06]">
-        <div className="hero-grid absolute inset-0" aria-hidden />
-        <div className="absolute -top-40 left-1/2 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-violet/25 blur-[120px]" aria-hidden />
-        <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-16 sm:px-6 sm:pt-24">
-          <Reveal>
-            <p className="caps text-teal">Neurogenesis · Alzheimer's disease · Drug repurposing</p>
-            <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[1.1] sm:text-6xl">
-              Which approved drugs deserve a lab test for <em className="text-teal">neurogenesis</em>?
-            </h1>
-            <p className="mt-5 max-w-2xl text-lg text-muted">
-              NeuroRx turns scattered, contradictory literature into a graph where every drug claim is linked to a paper, graded for
-              confidence and flagged when contradicted.
-            </p>
-          </Reveal>
-          <div className="mt-8 grid max-w-2xl grid-cols-3 gap-3">
-            <Tile label="Papers processed" value={stats.data?.papers} delay={0.1} />
-            <Tile label="Verified claims" value={stats.data?.claims_verified} delay={0.18} />
-            <Tile label="Drugs scored" value={stats.data?.drugs_scored} delay={0.26} />
-          </div>
-          <Reveal delay={0.3} className="mt-8 max-w-xl">
-            <label className="relative block">
-              <span className="sr-only">Search drugs</span>
-              <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a drug, e.g. metformin"
-                className="w-full rounded-2xl border border-white/10 bg-surface/80 py-3.5 pl-11 pr-4 text-base shadow-card outline-none backdrop-blur placeholder:text-muted focus:border-violet" />
-            </label>
-          </Reveal>
-        </div>
-      </section>
+      <Hero stats={stats.data} onSearchFocus={() => window.setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 500)} />
+      <Marquee />
+      <Overview stats={stats.data} drugs={drugs.data ?? []} />
+      <Insights stats={stats.data} drugs={drugs.data ?? []} />
 
-      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <div className="mb-6 flex flex-wrap items-center gap-2">
+      <section id="ranking" className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <p className="caps text-teal">Ranking</p>
+        <h2 className="mt-2 text-3xl sm:text-4xl">Every drug, scored and explained</h2>
+        <label className="relative mt-5 block max-w-xl">
+          <span className="sr-only">Search drugs</span>
+          <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
+          <input ref={searchRef} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a drug, e.g. metformin"
+            className="w-full rounded-2xl border border-white/10 bg-surface/80 py-3.5 pl-11 pr-4 text-base shadow-card outline-none placeholder:text-muted focus:border-violet" />
+        </label>
+        <div className="mb-6 mt-6 flex flex-wrap items-center gap-2">
           <SlidersHorizontal size={16} className="mr-1 text-muted" aria-hidden />
           {chip('all', 'All')}{chip('pro', 'Pro-neurogenic')}{chip('safety', 'Safety flags')}{chip('conflict', 'Conflicted')}
           <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" aria-hidden />
