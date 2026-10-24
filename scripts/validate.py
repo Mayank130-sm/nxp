@@ -84,6 +84,10 @@ def main() -> None:
               f"- Claims kept after de-duplication: {verified_n}", ""]
     ev = config.RESULTS_DIR / "extraction_eval.json"
     lines += ["## Extraction vs. gold set", ""]
+    lines += ["The 100 gold sentences were labelled by Claude (an AI), not an independent human annotator, so treat",
+              "these as a sanity check and replace them with human labels for a publishable number. Species and",
+              "study-design precision is low by construction: the gold labels only what the sentence states,",
+              "while the pipeline deliberately falls back to the paper's dominant animal species.", ""]
     lines += ["```json", ev.read_text(encoding="utf-8"), "```"] if ev.exists() else [
         "Not computed: `data/labels/gold_sentences.csv` has not been hand-labelled yet."]
     (config.RESULTS_DIR / "validation.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

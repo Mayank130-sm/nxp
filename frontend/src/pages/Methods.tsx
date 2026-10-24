@@ -85,11 +85,11 @@ function Validation({ stats }: { stats: Stats }) {
           <p className="mt-1 text-xs text-muted">Unverified claims are discarded, never shown.</p>
         </div>
         <div className="rounded-xl bg-white/[0.03] p-4">
-          <p className="caps">Extraction vs. hand-labelled gold set</p>
+          <p className="caps">Extraction vs. gold set (AI-labelled)</p>
           {ev && typeof ev.claim_detection === 'object' ? (
             <p className="mt-1 font-serif text-3xl">P {(ev.claim_detection.precision * 100).toFixed(0)}% · R {(ev.claim_detection.recall * 100).toFixed(0)}%</p>
           ) : <p className="mt-1 font-serif text-3xl text-muted">unknown</p>}
-          <p className="mt-1 text-xs text-muted">{ev ? `n = ${ev.n_gold as number} labelled sentences` : 'Gold set not labelled yet.'}</p>
+          <p className="mt-1 text-xs text-muted">{ev ? `n = ${ev.n_gold as number} sentences, labelled by Claude (not a human annotator); direction F1 ${typeof ev.direction === 'object' ? (ev.direction.f1 * 100).toFixed(0) : '?'}%` : 'Gold set not labelled yet.'}</p>
         </div>
       </div>
     </section>

@@ -23,7 +23,7 @@ def main() -> None:
         ("Claims verified (exact-quote grounded)", str(one("SELECT COUNT(*) FROM claims WHERE quote_verified=1"))),
         ("Controls recovered", f"{val['recovered']} of {val['total']}"),
         ("TinyFish live calls", f"{sum(live.values())} (search {live.get('search', 0)}, fetch {live.get('fetch', 0)}, agent {live.get('agent', 0)})"),
-        ("Extraction precision (gold set)", f"{ev['claim_detection']['precision']:.0%} on n={ev['n_gold']}" if ev else "pending: gold set not yet hand-labelled"),
+        ("Extraction claim-detection precision / recall (AI-labelled gold set)", f"{ev['claim_detection']['precision']:.0%} / {ev['claim_detection']['recall']:.0%} on n={ev['n_gold']}" if ev else "pending"),
         ("LLM claims whose quote verified", f"{frac:.1%}" if frac is not None else "unknown"),
         ("Extractor model", config.OLLAMA_MODEL),
     ]

@@ -24,6 +24,9 @@ BBB_POSITIVE = re.compile(r"cross(es)?|penetrat|brain|cns|central nervous", re.I
 BBB_NEGATIVE = re.compile(r"poor(ly)? (penetrat|cross)|does not cross|limited (brain|cns)|not cross", re.IGNORECASE)
 
 
+BBB_UNSTATED = re.compile(r"(does|do) not (explicitly )?(state|mention|say)|not (explicitly )?stated|no mention", re.IGNORECASE)
+
+
 def marker_score(markers: str | None) -> float:
     """Distinct marker classes (proliferation / immature / mature / stem), 3 classes = full marks."""
     if not markers:
@@ -39,7 +42,9 @@ def replication_score(n_papers: int) -> float:
 def dose_bbb_score(dose: str | None, bbb_note: str | None) -> float:
     score = 0.5 if dose else 0.0
     if bbb_note:
-        if BBB_NEGATIVE.search(bbb_note):
+        if BBB_UNSTATED.search(bbb_note):
+            score += 0.15  # label is silent: same as unknown
+        elif BBB_NEGATIVE.search(bbb_note):
             score += 0.0
         elif BBB_POSITIVE.search(bbb_note):
             score += 0.5

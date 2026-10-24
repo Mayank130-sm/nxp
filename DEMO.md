@@ -37,7 +37,7 @@ Numbers below come from `results/slide_numbers.md` (regenerate with `python scri
 
 > "TinyFish is the web layer, and these are real call counts from our own log. **Search** found ranked open-access URLs for every drug and stage. **Fetch** turned the open-access pages into clean Markdown so we could read Methods and Results, where species, dose and markers live. And **Agent** handles what has no API: it drove ClinicalTrials.gov and drug-label pages to bring back trial lists and blood-brain-barrier notes. Search and Fetch are free-tier, with caching, rate limiting and a call log."
 
-*Show:* the three counters (search 84, fetch 29, agent 18 live calls at the time of writing; read the live panel).
+*Show:* the three counters (search 84, fetch 29, agent 28 live calls at the time of writing, 141 in total; read the live panel).
 
 ## 2:25-2:50 Validation and honesty (slide 6, Methods validation card)
 

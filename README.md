@@ -94,7 +94,7 @@ Per-claim confidence (0-100), computed in `backend/app/grade.py`; weights live i
 
 ## Validation
 
-`python scripts/validate.py` writes `results/validation.md` and `results/validation.json`: control recovery (positive: fluoxetine, lithium, metformin, memantine; negative: dexamethasone, morphine, ethanol), the ranking ablation with vs. without evidence grading, and the fraction of LLM-proposed claims whose quote verified. `scripts/eval_extraction.py` computes per-field precision/recall/F1 against `data/labels/gold_sentences.csv` once it is hand-labelled (`scripts/make_gold_template.py` generates the 100-row template). Disagreements with a control are reported as they are.
+`python scripts/validate.py` writes `results/validation.md` and `results/validation.json`: control recovery (positive: fluoxetine, lithium, metformin, memantine; negative: dexamethasone, morphine, ethanol), the ranking ablation with vs. without evidence grading, and the fraction of LLM-proposed claims whose quote verified. `scripts/eval_extraction.py` computes per-field precision/recall/F1 against `data/labels/gold_sentences.csv` (`scripts/make_gold_template.py` generates the 100-row template; the shipped labels are AI-made, see Limitations). Disagreements with a control are reported as they are.
 
 ## Limitations
 
@@ -103,7 +103,7 @@ Per-claim confidence (0-100), computed in `backend/app/grade.py`; weights live i
 - Sentence-level extraction misses effects stated across several sentences and results only in figures.
 - "Independent" papers are distinct papers; shared-lab authorship is not detected.
 - Drug-name matching uses a synonym list; unusual abbreviations are missed.
-- The gold-set metrics need the hand labels; until then they are reported as unknown.
+- The 100-sentence gold set (`data/labels/gold_sentences.csv`) was labelled by Claude, an AI, not by an independent human annotator. Treat the extraction metrics as a sanity check and replace the labels with human ones before quoting them as a result. Species/design precision is low by construction (the gold labels only what the sentence states; the pipeline falls back to the paper's dominant animal species).
 - Markdown formatting characters are stripped before quote checking, so a quote is verified against the formatting-stripped text.
 
 ## Honesty statement

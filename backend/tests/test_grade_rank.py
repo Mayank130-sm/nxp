@@ -75,3 +75,11 @@ def test_grade_all_end_to_end(tmp_path):
     assert grade_all(con) == 2
     rows = con.execute("SELECT confidence, penalties FROM claim_scores").fetchall()
     assert len(rows) == 2 and all(r["confidence"] > 0 and "single_lab" not in r["penalties"] for r in rows)
+
+
+def test_bbb_note_that_says_not_stated_is_unknown():
+    from app.grade import dose_bbb_score
+    silent = "The label does not state whether metformin crosses the blood-brain barrier."
+    assert dose_bbb_score("10 mg/kg", silent) == dose_bbb_score("10 mg/kg", None) == 0.65
+    assert dose_bbb_score(None, "Crosses the blood-brain barrier") == 0.5
+    assert dose_bbb_score(None, "Does not cross the blood-brain barrier") == 0.0
