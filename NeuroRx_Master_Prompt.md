@@ -1,7 +1,5 @@
 # MASTER PROMPT: Build NeuroRx end to end (24-hour hackathon build)
-
-Paste everything below this line into Claude Code, run from an empty repo folder.
-
+do commits regularly in github associated in this folder.
 ---
 
 ## 0. Role and mission
