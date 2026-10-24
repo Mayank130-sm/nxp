@@ -27,8 +27,9 @@ LABEL_URL = "https://dailymed.nlm.nih.gov"
 
 
 def trials_goal(drug: str) -> str:
-    return (f"Search for trials of {drug} in Alzheimer's disease. Return JSON list of up to 5 trials with "
-            "nct_id, phase, status and condition, copied from the search results page.")
+    return (f"On ClinicalTrials.gov search for the intervention '{drug}' with condition 'Alzheimer Disease'. "
+            "Return JSON with up to 5 trials from the results table, each with nct_id, phase, status and "
+            "condition, copied exactly as shown.")
 
 
 def notes_goal(drug: str) -> str:
@@ -61,11 +62,15 @@ def save_notes(con: sqlite3.Connection, drug: str, result: dict[str, Any] | None
 
 
 def run_agents(con: sqlite3.Connection, drugs: list[Drug], tf: TinyFishClient,
-               n_trials: int = 4, n_notes: int = 6) -> dict[str, int]:
+               n_trials: int = 20, n_notes: int = 10) -> dict[str, int]:
+    """Fill gaps only: trials for drugs with none stored, label notes for drugs with none stored."""
     stats = {"runs": 0, "steps": 0, "trials": 0, "notes": 0, "failed": 0}
-    jobs = [("trials", d) for d in drugs[:n_trials]] + [("notes", d) for d in drugs[:n_notes]]
+    have_trials = {r[0] for r in con.execute("SELECT DISTINCT drug FROM trials")}
+    have_notes = {r[0] for r in con.execute("SELECT drug FROM drug_notes")}
+    jobs = ([("trials", d) for d in drugs if d.name not in have_trials][:n_trials]
+            + [("notes", d) for d in drugs if d.name not in have_notes][:n_notes])
     for kind, drug in jobs:
-        if db.is_done(con, f"agent_{kind}_v2", drug.name):
+        if db.is_done(con, f"agent_{kind}_v3", drug.name):
             continue
         goal, url, schema = ((trials_goal(drug.name), TRIALS_URL, TRIALS_SCHEMA) if kind == "trials"
                              else (notes_goal(drug.name), LABEL_URL, NOTES_SCHEMA))
@@ -88,6 +93,6 @@ def run_agents(con: sqlite3.Connection, drugs: list[Drug], tf: TinyFishClient,
         else:
             stats["failed"] += 1
         con.commit()
-        db.mark_done(con, f"agent_{kind}_v2", drug.name)
+        db.mark_done(con, f"agent_{kind}_v3", drug.name)
         print(f"[agents] {kind} {drug.name}: {run.get('status')} steps={run.get('num_of_steps')}")
     return stats
