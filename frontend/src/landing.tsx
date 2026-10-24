@@ -138,11 +138,11 @@ export function Hero({ onStart }: { onStart: () => void }) {
       <div className="relative mx-auto min-h-[640px] max-w-[1400px] overflow-hidden border border-white/10 sm:min-h-[760px]">
         <Plus className="-left-px -top-1.5" /><Plus className="-right-px -top-1.5" /><Plus className="-bottom-1.5 -left-px" /><Plus className="-bottom-1.5 -right-px" />
         <Funnel />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_42%,rgba(0,0,0,0.35),transparent_70%)]" aria-hidden />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_40%_at_50%_30%,rgba(0,0,0,0.7),transparent_72%)]" aria-hidden />
         <div className="relative flex min-h-[640px] flex-col items-center px-4 pt-24 text-center sm:min-h-[760px] sm:pt-32">
-          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-4xl font-medium leading-[1.05] tracking-tight sm:text-7xl" style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif' }}>
+          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-4xl font-semibold leading-[1.05] tracking-tight sm:text-7xl" style={{ fontFamily: "Inter, Helvetica, Arial, sans-serif", textShadow: "0 2px 24px rgba(0,0,0,0.9)" }}>
             <span className="block text-white">Which approved drugs deserve</span>
-            <span className="block bg-gradient-to-b from-white to-white/35 bg-clip-text text-transparent">a lab test for neurogenesis?</span>
+            <span className="block bg-gradient-to-b from-white to-white/75 bg-clip-text text-transparent">a lab test for neurogenesis?</span>
           </motion.h1>
           <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-6 max-w-xl text-base text-white/85 sm:text-lg" style={{ textShadow: '0 1px 12px #000' }}>
             Quote-grounded evidence from the literature, graded 0-100 and checked for contradictions. Every rank comes with its reason.
