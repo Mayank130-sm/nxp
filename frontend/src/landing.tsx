@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, ArrowUpRight, BadgeCheck, Check, FileSearch, FlaskConical, Gauge, GitBranch, Globe, Scale, ShieldAlert, Sparkles, SplitSquareHorizontal } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { ArrowRight, ArrowUpRight, BadgeCheck, Check, ChevronsRight, FileSearch, FlaskConical, Gauge, Globe, Scale, ShieldAlert, Sparkles, SplitSquareHorizontal } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { DrugSummary, Stats } from './api'
@@ -38,7 +38,7 @@ function PipelineVisual() {
           const on = i === active
           return (
             <li key={s.label} className={`relative flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors duration-500 ${on ? 'border-teal/50 bg-teal/10' : done ? 'border-white/10 bg-white/[0.03]' : 'border-white/[0.06]'}`}>
-              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${on ? 'bg-teal text-ink' : done ? 'bg-violet/25 text-[#b6adf5]' : 'bg-white/5 text-muted'}`}>
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${on ? 'bg-teal text-ink' : done ? 'bg-violet/25 text-white/80' : 'bg-white/5 text-muted'}`}>
                 {done ? <Check size={16} aria-hidden /> : <s.icon size={16} aria-hidden />}
               </span>
               <span className="min-w-0 flex-1">
@@ -51,70 +51,139 @@ function PipelineVisual() {
           )
         })}
       </ol>
-      <motion.div key={active} initial={{ opacity: 0, y: 8 }} animate={{ opacity: active >= 4 ? 1 : 0, y: 0 }} className="mt-4 rounded-xl border border-white/10 bg-ink/60 p-3">
+      {active >= 4 && <motion.div key={active} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-xl border border-white/10 bg-ink/60 p-3">
         <p className="text-xs text-muted">A claim is kept only if its quote appears word for word in the paper. Otherwise it is discarded.</p>
         <div className="mt-2 flex items-center gap-2"><Badge tone="teal" icon={<Check size={12} aria-hidden />}>quote verified</Badge><span className="text-xs text-muted">illustration of the rule</span></div>
-      </motion.div>
+      </motion.div>}
     </div>
   )
 }
 
-export function Hero({ stats, onSearchFocus }: { stats: Stats | null; onSearchFocus: () => void }) {
-  const tile = (label: string, v: number | undefined) => (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-      <p className="caps">{label}</p>
-      <p className="mt-1 font-serif text-3xl">{v === undefined ? <Skeleton className="h-9 w-16" /> : <CountUp value={v} />}</p>
+/** Particle funnel: a swirl of points that narrows to a neck and flares into a disc. Own implementation, 2D canvas. */
+function Funnel() {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const cv = ref.current
+    const ctx = cv?.getContext('2d')
+    if (!cv || !ctx) return
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const N = window.innerWidth < 640 ? 2200 : 7000
+    const pts = Array.from({ length: N }, () => ({ t: Math.random(), a: Math.random() * Math.PI * 2, j: 0.9 + Math.random() * 0.2, s: Math.random() }))
+    let w = 0
+    let h = 0
+    let raf = 0
+    const fit = () => {
+      const r = cv.getBoundingClientRect()
+      const dpr = Math.min(2, window.devicePixelRatio || 1)
+      w = r.width
+      h = r.height
+      cv.width = w * dpr
+      cv.height = h * dpr
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    }
+    const draw = (time: number) => {
+      ctx.clearRect(0, 0, w, h)
+      const cx = w / 2
+      const top = -h * 0.05
+      const neck = h * 0.62
+      const base = h * 0.9
+      for (const p of pts) {
+        // t: 0 top rim, 0.5 neck, 1 bottom disc
+        const up = p.t < 0.5
+        const k = up ? 1 - p.t / 0.5 : (p.t - 0.5) / 0.5
+        const rad = (w * 0.04 + (up ? w * 0.34 : w * 0.62) * k * k) * p.j
+        const ang = time * 0.00022 * (1.4 - k) + p.a + k * 5
+        const x = cx + Math.cos(ang) * rad
+        const yBase = up ? top + (neck - top) * (1 - k) : neck + (base - neck) * Math.min(1, k * 1.6)
+        const y = yBase + Math.sin(ang) * rad * (up ? 0.16 : 0.2)
+        const depth = (Math.sin(ang) + 1) / 2
+        ctx.fillStyle = `rgba(255,255,255,${Math.min(1, (0.25 + depth * 0.75) * (0.55 + (1 - k) * 0.6))})`
+        ctx.fillRect(x, y, 1.1 + p.s * 1.1, 1.1 + p.s * 1.1)
+      }
+    }
+    const loop = (t: number) => {
+      draw(t)
+      raf = requestAnimationFrame(loop)
+    }
+    fit()
+    if (still) draw(4000)
+    else raf = requestAnimationFrame(loop)
+    window.addEventListener('resize', fit)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', fit)
+    }
+  }, [])
+  return <canvas ref={ref} className="absolute inset-0 h-full w-full" aria-hidden />
+}
+
+const SOURCES = ['PubMed', 'TinyFish Search', 'TinyFish Fetch', 'TinyFish Agent', 'ClinicalTrials.gov', 'DailyMed', 'Ollama', 'NetworkX', 'FastAPI']
+
+function Marquee() {
+  const row = [...SOURCES, ...SOURCES]
+  return (
+    <div className="overflow-hidden py-6 [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]" aria-label="Data sources and tools">
+      <div className="marquee flex w-max items-center gap-14">
+        {row.map((s, i) => <span key={i} className="text-xl font-semibold tracking-tight text-white/55" aria-hidden={i >= SOURCES.length}>{s}</span>)}
+      </div>
     </div>
   )
+}
+
+const Plus = ({ className }: { className: string }) => <span className={`pointer-events-none absolute text-lg leading-none text-white/50 ${className}`} aria-hidden>+</span>
+
+export function Hero({ onStart }: { onStart: () => void }) {
   return (
-    <section className="noise relative overflow-hidden border-b border-white/[0.06]">
-      <div className="hero-grid absolute inset-0" aria-hidden />
-      <div className="absolute -top-40 left-1/4 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-violet/30 blur-[130px]" aria-hidden />
-      <div className="absolute -right-24 top-24 h-[320px] w-[420px] rounded-full bg-teal/15 blur-[120px]" aria-hidden />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-14 sm:px-6 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr]">
-        <div>
-          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-teal" /> Neurogenesis · Alzheimer's disease · Drug repurposing
-          </motion.p>
-          <motion.h1 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="mt-5 text-4xl font-semibold leading-[1.05] sm:text-6xl">
-            Which approved drugs deserve a lab test for <em className="text-teal">neurogenesis</em>?
+    <section className="relative px-3 pb-3 sm:px-6">
+      <div className="relative mx-auto min-h-[640px] max-w-[1400px] overflow-hidden border border-white/10 sm:min-h-[760px]">
+        <Plus className="-left-px -top-1.5" /><Plus className="-right-px -top-1.5" /><Plus className="-bottom-1.5 -left-px" /><Plus className="-bottom-1.5 -right-px" />
+        <Funnel />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_42%,rgba(0,0,0,0.35),transparent_70%)]" aria-hidden />
+        <div className="relative flex min-h-[640px] flex-col items-center px-4 pt-24 text-center sm:min-h-[760px] sm:pt-32">
+          <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-4xl font-medium leading-[1.05] tracking-tight sm:text-7xl" style={{ fontFamily: 'Inter, Helvetica, Arial, sans-serif' }}>
+            <span className="block text-white">Which approved drugs deserve</span>
+            <span className="block bg-gradient-to-b from-white to-white/35 bg-clip-text text-transparent">a lab test for neurogenesis?</span>
           </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="mt-5 max-w-xl text-lg text-muted">
-            NeuroRx reads the literature with an agent pipeline, keeps only claims it can quote, grades each one, flags contradictions, and
-            ranks drugs with a plain-language reason.
+          <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-6 max-w-xl text-base text-white/85 sm:text-lg" style={{ textShadow: '0 1px 12px #000' }}>
+            Quote-grounded evidence from the literature, graded 0-100 and checked for contradictions. Every rank comes with its reason.
           </motion.p>
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }} className="mt-7 flex flex-wrap gap-3">
-            <button onClick={() => { scrollTo('ranking'); onSearchFocus() }} className="inline-flex items-center gap-2 rounded-xl bg-teal px-5 py-3 text-sm font-semibold text-ink transition-transform hover:-translate-y-0.5">
-              Explore the ranking <ArrowRight size={16} aria-hidden />
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-9 flex flex-wrap justify-center gap-3">
+            <button onClick={onStart} className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-black px-7 py-3.5 text-sm font-semibold uppercase tracking-wide text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] transition-colors hover:bg-white/10">
+              Explore ranking <ChevronsRight size={16} aria-hidden />
             </button>
-            <Link to="/graph" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-medium transition-colors hover:bg-white/10">
-              <GitBranch size={16} aria-hidden /> Open the evidence graph
+            <Link to="/graph" className="inline-flex items-center rounded-full bg-white px-7 py-3.5 text-sm font-semibold uppercase tracking-wide text-black transition-transform hover:-translate-y-0.5">
+              Open the graph
             </Link>
           </motion.div>
-          <div className="mt-9 grid max-w-xl grid-cols-3 gap-3">
-            {tile('Papers processed', stats?.papers)}
-            {tile('Verified claims', stats?.claims_verified)}
-            {tile('Drugs scored', stats?.drugs_scored)}
-          </div>
+          <div className="mt-auto w-full"><Marquee /></div>
         </div>
-        <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
-          <PipelineVisual />
-        </motion.div>
       </div>
     </section>
   )
 }
 
-const SOURCES = ['PubMed', 'TinyFish Search', 'TinyFish Fetch', 'TinyFish Agent', 'ClinicalTrials.gov', 'DailyMed', 'Ollama', 'NetworkX', 'FastAPI']
-
-export function Marquee() {
-  const row = [...SOURCES, ...SOURCES]
-  return (
-    <div className="overflow-hidden border-b border-white/[0.06] py-5" aria-label="Data sources and tools">
-      <div className="marquee flex w-max items-center gap-12">
-        {row.map((s, i) => <span key={i} className="font-serif text-lg text-muted/80" aria-hidden={i >= SOURCES.length}>{s}</span>)}
-      </div>
+export function PipelineSection({ stats }: { stats: Stats | null }) {
+  const tile = (label: string, v: number | undefined) => (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
+      <p className="caps">{label}</p>
+      <p className="mt-1 font-serif text-4xl">{v === undefined ? <Skeleton className="h-10 w-16" /> : <CountUp value={v} />}</p>
     </div>
+  )
+  return (
+    <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2">
+      <div>
+        <p className="caps text-white/70">How it works</p>
+        <h2 className="mt-2 text-3xl sm:text-4xl">An agent pipeline that shows its work.</h2>
+        <p className="mt-4 max-w-lg text-muted">
+          TinyFish finds and fetches the papers, a local model reads them behind two gates, and anything it cannot quote word for word is
+          thrown away before grading.
+        </p>
+        <div className="mt-7 grid max-w-lg grid-cols-3 gap-3">
+          {tile('Papers', stats?.papers)}{tile('Verified claims', stats?.claims_verified)}{tile('Drugs scored', stats?.drugs_scored)}
+        </div>
+      </div>
+      <PipelineVisual />
+    </section>
   )
 }
 
@@ -122,7 +191,7 @@ function Panel({ icon, title, sub, children }: { icon: ReactNode; title: string;
   return (
     <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="card flex h-full flex-col p-5">
       <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet/25 text-[#b6adf5]">{icon}</span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet/25 text-white/80">{icon}</span>
         <div><h3 className="text-lg leading-tight">{title}</h3><p className="text-xs text-muted">{sub}</p></div>
       </div>
       <div className="mt-4 flex-1">{children}</div>
@@ -214,9 +283,9 @@ export function Insights({ stats, drugs }: { stats: Stats | null; drugs: DrugSum
           <div className="mt-4 h-64" role="img" aria-label="Bar chart of the ten highest drug scores">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chart} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                <XAxis dataKey="name" tick={{ fill: '#9a97c4', fontSize: 11 }} tickLine={false} axisLine={false} interval={0} angle={-30} textAnchor="end" height={56} />
-                <YAxis tick={{ fill: '#9a97c4', fontSize: 11 }} tickLine={false} axisLine={false} domain={[0, 100]} />
-                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ background: '#13112b', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#f1f0fa' }} />
+                <XAxis dataKey="name" tick={{ fill: '#9d9da8', fontSize: 11 }} tickLine={false} axisLine={false} interval={0} angle={-30} textAnchor="end" height={56} />
+                <YAxis tick={{ fill: '#9d9da8', fontSize: 11 }} tickLine={false} axisLine={false} domain={[0, 100]} />
+                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ background: '#0d0d12', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#f1f0fa' }} />
                 <Bar dataKey="score" radius={[6, 6, 0, 0]} isAnimationActive>
                   {chart.map((c) => <Cell key={c.name} fill={scoreColor(c.score)} />)}
                 </Bar>

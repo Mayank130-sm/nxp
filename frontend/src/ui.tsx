@@ -58,7 +58,7 @@ export function Bar({ label, value, color = 'var(--violet)', hint, display }: { 
 type Tone = 'teal' | 'violet' | 'amber' | 'coral' | 'muted'
 const tones: Record<Tone, string> = {
   teal: 'bg-teal/15 text-teal border-teal/30',
-  violet: 'bg-violet/20 text-[#b6adf5] border-violet/40',
+  violet: 'bg-violet/20 text-white/80 border-violet/40',
   amber: 'bg-amber/15 text-amber border-amber/30',
   coral: 'bg-coral/15 text-coral border-coral/30',
   muted: 'bg-white/5 text-muted border-white/10',

@@ -3,28 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --ink: #07060f;
-  --night: #0e0b21;
-  --surface: #14112c;
-  --text: #f1f0fa;
-  --muted: #9a97c4;
+  --ink: #000000;
+  --night: #050507;
+  --surface: #0d0d12;
+  --text: #f5f5f7;
+  --muted: #9d9da8;
   --teal: #14a596;
-  --violet: #6b5bd2;
+  --violet: #a9a9bd;
   --amber: #f2b84b;
   --coral: #f0645f;
   --line: rgba(255, 255, 255, 0.09);
-  --ink-rgb: 7 6 15;
-  --night-rgb: 14 11 33;
-  --surface-rgb: 20 17 44;
-  --text-rgb: 241 240 250;
-  --muted-rgb: 154 151 196;
+  --ink-rgb: 0 0 0;
+  --night-rgb: 5 5 7;
+  --surface-rgb: 13 13 18;
+  --text-rgb: 245 245 247;
+  --muted-rgb: 157 157 168;
   --teal-rgb: 20 165 150;
-  --violet-rgb: 107 91 210;
+  --violet-rgb: 169 169 189;
   --amber-rgb: 242 184 75;
   --coral-rgb: 240 100 95;
 }
 
-html { background-color: #07060f; }
+html { background-color: #000; }
 
 body {
   margin: 0;
@@ -62,7 +62,7 @@ h1, h2, h3, .font-serif { font-family: Fraunces, 'Cormorant Garamond', Georgia, 
 .ring-glow { filter: drop-shadow(0 0 10px currentColor); }
 
 :focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 8px; }
-::selection { background: rgba(107, 91, 210, 0.5); }
+::selection { background: rgba(255, 255, 255, 0.25); }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 8px; }
 

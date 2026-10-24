@@ -3,7 +3,7 @@ import { ArrowUpRight, Search, SlidersHorizontal } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchDrugs, fetchStats, useAsync, type DrugSummary } from '../api'
-import { Hero, Insights, Marquee, Overview } from '../landing'
+import { Hero, Insights, Overview, PipelineSection } from '../landing'
 import {
   Badge, ConfidenceBadge, ConflictBadge, Disclaimer, Empty, ErrorBox, EvidenceChip, SafetyBadge,
   ScoreRing, Skeleton, pretty, useDebounced,
@@ -89,8 +89,8 @@ export default function Home() {
 
   return (
     <main>
-      <Hero stats={stats.data} onSearchFocus={() => window.setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 500)} />
-      <Marquee />
+      <Hero onStart={() => { document.getElementById('ranking')?.scrollIntoView({ behavior: 'smooth' }); window.setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 600) }} />
+      <PipelineSection stats={stats.data} />
       <Overview stats={stats.data} drugs={drugs.data ?? []} />
       <Insights stats={stats.data} drugs={drugs.data ?? []} />
 
