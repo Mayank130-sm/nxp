@@ -1,0 +1,29 @@
+[ingest] fluoxetine: already done, skipping
+[ingest] lithium: {'pubmed': 14, 'search_urls': 32, 'fulltext': 4}
+[ingest] metformin: {'pubmed': 14, 'search_urls': 30, 'fulltext': 2}
+[ingest] memantine: {'pubmed': 14, 'search_urls': 35, 'fulltext': 4}
+[ingest] dexamethasone: {'pubmed': 14, 'search_urls': 30, 'fulltext': 4}
+[ingest] morphine: {'pubmed': 14, 'search_urls': 30, 'fulltext': 4}
+[ingest] ethanol: {'pubmed': 14, 'search_urls': 30, 'fulltext': 4}
+[ingest] donepezil: {'pubmed': 14, 'search_urls': 30, 'fulltext': 3}
+[ingest] sertraline: {'pubmed': 14, 'search_urls': 29, 'fulltext': 2}
+[ingest] escitalopram: {'pubmed': 14, 'search_urls': 35, 'fulltext': 4}
+[ingest] citalopram: {'pubmed': 14, 'search_urls': 30, 'fulltext': 0}
+[ingest] imipramine: {'pubmed': 14, 'search_urls': 31, 'fulltext': 3}
+[ingest] valproic acid: {'pubmed': 14, 'search_urls': 30, 'fulltext': 4}
+[ingest] rapamycin: {'pubmed': 14, 'search_urls': 29, 'fulltext': 4}
+[ingest] liraglutide: {'pubmed': 14, 'search_urls': 30, 'fulltext': 2}
+[ingest] semaglutide: {'pubmed': 13, 'search_urls': 30, 'fulltext': 4}
+[ingest] exendin-4: {'pubmed': 14, 'search_urls': 33, 'fulltext': 3}
+[ingest] resveratrol: {'pubmed': 14, 'search_urls': 30, 'fulltext': 1}
+[ingest] curcumin: {'pubmed': 14, 'search_urls': 30, 'fulltext': 3}
+[ingest] simvastatin: {'pubmed': 14, 'search_urls': 30, 'fulltext': 3}
+[ingest] atorvastatin: {'pubmed': 14, 'search_urls': 31, 'fulltext': 4}
+[ingest] sildenafil: {'pubmed': 14, 'search_urls': 30, 'fulltext': 2}
+[ingest] rolipram: {'pubmed': 14, 'search_urls': 30, 'fulltext': 4}
+[ingest] ketamine: {'pubmed': 14, 'search_urls': 30, 'fulltext': 4}
+[ingest] minocycline: {'pubmed': 14, 'search_urls': 30, 'fulltext': 4}
+[ingest] melatonin: {'pubmed': 14, 'search_urls': 29, 'fulltext': 3}
+[ingest] pioglitazone: {'pubmed': 14, 'search_urls': 33, 'fulltext': 3}
+[ingest] levetiracetam: {'pubmed': 14, 'search_urls': 30, 'fulltext': 4}
+papers=453 fulltext=87

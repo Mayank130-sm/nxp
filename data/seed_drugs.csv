@@ -1,0 +1,29 @@
+drug,synonyms,category
+fluoxetine,Prozac;Sarafem,control_pos
+lithium,lithium chloride;lithium carbonate;Li+,control_pos
+metformin,Glucophage;dimethylbiguanide,control_pos
+memantine,Namenda;Ebixa,control_pos
+dexamethasone,Decadron;glucocorticoid,control_neg
+morphine,morphine sulfate,control_neg
+ethanol,alcohol;ethyl alcohol,control_neg
+donepezil,Aricept,candidate
+sertraline,Zoloft,candidate
+escitalopram,Lexapro,candidate
+citalopram,Celexa,candidate
+imipramine,Tofranil,candidate
+valproic acid,valproate;VPA;Depakote,candidate
+rapamycin,sirolimus;Rapamune,candidate
+liraglutide,Victoza,candidate
+semaglutide,Ozempic;Wegovy,candidate
+exendin-4,exenatide;Byetta,candidate
+resveratrol,,candidate
+curcumin,,candidate
+simvastatin,Zocor,candidate
+atorvastatin,Lipitor,candidate
+sildenafil,Viagra,candidate
+rolipram,,candidate
+ketamine,Spravato,candidate
+minocycline,Minocin,candidate
+melatonin,,candidate
+pioglitazone,Actos,candidate
+levetiracetam,Keppra,candidate
