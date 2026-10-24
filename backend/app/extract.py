@@ -119,26 +119,47 @@ SPECIES_PATTERNS = {
 }
 
 
-def paper_context(text: str, title: str = "") -> dict[str, str | None]:
-    """Deterministic paper-level species / study design from word counts (fallback when a claim sentence
-    does not state them). Only counts words present in the text; never guesses beyond that."""
-    counts = {k: len(re.findall(p, text, re.IGNORECASE)) for k, p in SPECIES_PATTERNS.items()}
-    species = max(counts, key=lambda k: counts[k]) if any(counts.values()) else None
-    if species and counts[species] < 2:
-        species = None
-    head = f"{title} {text[:600]}".lower()
-    in_vitro = len(re.findall(r"in vitro|cultured|culture|cell line|neurospheres?", text, re.IGNORECASE))
-    if re.search(r"meta-analysis|systematic review|\breview\b", head):
+REVIEW_TITLE = re.compile(
+    r"meta-analysis|systematic review|\breview\b|\bupdate\b|\boverview\b|\badvances?\b|\bperspectives?\b|"
+    r"\brecent\b|\bimplications\b|\bhallmarks?\b|\bcrosstalk\b|\bcross-talk\b|\bpharmacological applications\b",
+    re.IGNORECASE,
+)
+HUMAN_TRIAL = re.compile(r"randomi[sz]ed|clinical trial|cohort|participants|volunteers", re.IGNORECASE)
+HUMAN_CELLS = re.compile(
+    r"iPSC|hiPSC|organoid|hNSC|hNPC|neuroblastoma|SH-?SY5Y|human\s+(\w+\s+){0,2}(progenitors?|cells?|neurons?|stem)",
+    re.IGNORECASE)
+
+
+def species_counts(text: str) -> dict[str, int]:
+    return {k: len(re.findall(p, text, re.IGNORECASE)) for k, p in SPECIES_PATTERNS.items()}
+
+
+def claim_context(quote: str, text: str, title: str = "") -> dict[str, str | None]:
+    """Species / study design for a claim, deterministic and conservative.
+
+    Priority: (1) species named in the claim's own quote; (2) the dominant ANIMAL species in the paper
+    (at least 2 mentions); human is assigned only when the quote itself says so, because a paper-wide
+    count of "patients" says nothing about who was studied. Review-style titles are labelled as reviews.
+    """
+    in_quote = species_counts(quote)
+    species = max(in_quote, key=lambda k: in_quote[k]) if any(in_quote.values()) else None
+    if species is None:
+        paper = {k: v for k, v in species_counts(text).items() if k != "human"}
+        top = max(paper, key=lambda k: paper[k]) if any(paper.values()) else None
+        species = top if top and paper[top] >= 2 else None
+    review = bool(REVIEW_TITLE.search(title)) or bool(re.search(r"meta-analysis|systematic review|\breview\b", text[:600].lower()))
+    cultured = len(re.findall(r"in vitro|cultured|culture|cell line|neurospheres?", text, re.IGNORECASE))
+    if review:
         design = "review_or_meta"
-    elif species in ("mouse", "rat", "zebrafish"):
-        design = "rodent" if species != "zebrafish" else "in_vitro"
+    elif species in ("mouse", "rat"):
+        design = "rodent"
     elif species == "monkey":
         design = "nonhuman_primate"
     elif species == "human":
-        design = ("human_clinical" if re.search(r"randomi[sz]ed|clinical trial|cohort|patients", text, re.IGNORECASE)
-                  else "human_cells_organoid")
+        design = "human_cells_organoid" if HUMAN_CELLS.search(quote) else (
+            "human_clinical" if HUMAN_TRIAL.search(quote) or HUMAN_TRIAL.search(title) else None)
     else:
-        design = "in_vitro" if in_vitro >= 3 else None
+        design = "in_vitro" if cultured >= 3 and not any(species_counts(text).values()) else None
     return {"species": species, "study_design": design}
 
 
@@ -214,14 +235,14 @@ def run_extract(con: sqlite3.Connection, drugs: list[Drug], llm: LLM, max_window
         if drug is None or db.is_done(con, "extract", key):
             continue
         text = (config.ROOT / row["text_path"]).read_text(encoding="utf-8")
-        ctx = paper_context(text, text.split(chr(10), 1)[0])
+        title = text.split(chr(10), 1)[0]
         kept, counts, seen = 0, {}, []
         for window in build_windows(text, drug, max_windows):
             claim = extract_window(llm, drug, window, counts)
             if claim is None or is_duplicate(claim["evidence_quote"], seen):
                 continue
             seen.append(claim["evidence_quote"].lower())
-            for field, value in ctx.items():
+            for field, value in claim_context(claim["evidence_quote"], text, title).items():
                 claim[field] = claim.get(field) or value
             claim.update(paper_id=row["id"], extractor_model=llm.model, process="neurogenesis")
             cols = ", ".join(claim)

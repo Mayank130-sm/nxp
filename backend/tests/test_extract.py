@@ -58,9 +58,16 @@ def test_extract_window_survives_llm_errors():
     assert extract_window(FakeLLM(ValueError("bad json")), FLX, "x") is None
 
 
-def test_paper_context_counts_words():
-    from app.extract import paper_context
-    ctx = paper_context("Mice received drug. Mice were scored. Rats were not used once.", "A study")
+def test_claim_context_is_conservative():
+    from app.extract import claim_context
+    # species stated in the quote wins
+    assert claim_context("Sildenafil raised BrdU+ cells in rats.", "Patients were treated. Mice mice.", "A study") == {
+        "species": "rat", "study_design": "rodent"}
+    # paper-level fallback is animal-only: many mentions of patients must NOT yield human evidence
+    ctx = claim_context("Neurogenesis increased.", "Patients patients patients. Mice were dosed. Mice were scored.", "A study")
     assert ctx == {"species": "mouse", "study_design": "rodent"}
-    assert paper_context("A cell assay.", "t") == {"species": None, "study_design": None}
-    assert paper_context("A narrative.", "Fluoxetine: a review")["study_design"] == "review_or_meta"
+    ctx = claim_context("Neurogenesis increased.", "Patients patients patients.", "A study")
+    assert ctx == {"species": None, "study_design": None}
+    # human only when the quote says so
+    assert claim_context("Patients on the drug showed more DCX cells.", "x", "Randomized trial")["study_design"] == "human_clinical"
+    assert claim_context("x", "y", "Sildenafil: recent pharmacological applications")["study_design"] == "review_or_meta"

@@ -3,12 +3,13 @@
 Usage: run_pipeline.py [--stage ingest] [--drugs a,b] [--dry-run]
 """
 import argparse
+import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
-from app import agents, db, extract, ingest
+from app import agents, db, extract, grade, ingest
 from app.llm import OllamaLLM
 from app.pubmed import PubMedClient
 from app.tinyfish_client import TinyFishClient
@@ -16,7 +17,7 @@ from app.tinyfish_client import TinyFishClient
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", default="all", choices=["all", "ingest", "extract", "agents"])
+    ap.add_argument("--stage", default="all", choices=["all", "ingest", "extract", "agents", "build"])
     ap.add_argument("--drugs", help="comma-separated subset of seed drugs")
     ap.add_argument("--dry-run", action="store_true", help="TinyFish cache only, no live calls")
     args = ap.parse_args()
@@ -32,6 +33,11 @@ def main() -> None:
         extract.run_extract(con, drugs, OllamaLLM())
     if args.stage in ("all", "agents"):
         print(agents.run_agents(con, drugs, TinyFishClient(dry_run=args.dry_run)))
+    if args.stage in ("all", "build"):
+        print(f"[build] graded {grade.grade_all(con)} claims")
+        for script in ("validate.py", "export_static.py"):
+            subprocess.run([sys.executable, str(Path(__file__).parent / script)], check=True, stdout=subprocess.DEVNULL)
+        print("[build] wrote results/validation.*, data/graph.json, frontend/public/data/*")
     n = con.execute("SELECT COUNT(*), SUM(fulltext_available) FROM papers").fetchone()
     print(f"papers={n[0]} fulltext={n[1]}")
 

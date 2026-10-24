@@ -1,0 +1,87 @@
+{
+  "controls": [
+    {
+      "drug": "fluoxetine",
+      "kind": "positive",
+      "expected": "pro-neurogenic evidence",
+      "observed": "7 papers increase / 0 decrease",
+      "ok": true,
+      "score": 30.7,
+      "rank": 19
+    },
+    {
+      "drug": "lithium",
+      "kind": "positive",
+      "expected": "pro-neurogenic evidence",
+      "observed": "4 papers increase / 0 decrease",
+      "ok": true,
+      "score": 42.0,
+      "rank": 13
+    },
+    {
+      "drug": "metformin",
+      "kind": "positive",
+      "expected": "pro-neurogenic evidence",
+      "observed": "3 papers increase / 0 decrease",
+      "ok": true,
+      "score": 41.5,
+      "rank": 14
+    },
+    {
+      "drug": "memantine",
+      "kind": "positive",
+      "expected": "pro-neurogenic evidence",
+      "observed": "6 papers increase / 0 decrease",
+      "ok": true,
+      "score": 55.2,
+      "rank": 4
+    },
+    {
+      "drug": "dexamethasone",
+      "kind": "negative",
+      "expected": "suppression / safety flag",
+      "observed": "no verified evidence (unknown)",
+      "ok": false,
+      "score": 0.0,
+      "rank": 23
+    },
+    {
+      "drug": "morphine",
+      "kind": "negative",
+      "expected": "suppression / safety flag",
+      "observed": "3 papers increase / 6 decrease, safety flag",
+      "ok": true,
+      "score": 0.0,
+      "rank": 27
+    },
+    {
+      "drug": "ethanol",
+      "kind": "negative",
+      "expected": "suppression / safety flag",
+      "observed": "1 papers increase / 4 decrease, safety flag",
+      "ok": true,
+      "score": 0.0,
+      "rank": 26
+    }
+  ],
+  "recovered": 6,
+  "total": 7,
+  "quote_verified_fraction": 0.979,
+  "claims_proposed_by_llm": 478,
+  "claims_quote_failed": 10,
+  "claims_kept": 399,
+  "ablation": [
+    {
+      "label": "With evidence grading",
+      "positives_mean_rank": 12.5,
+      "negatives_mean_rank": 25.5,
+      "separation": 13.0
+    },
+    {
+      "label": "Without grading (vote count)",
+      "positives_mean_rank": 10.0,
+      "negatives_mean_rank": 25.5,
+      "separation": 15.5
+    }
+  ]
+}

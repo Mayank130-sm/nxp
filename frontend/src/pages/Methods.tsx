@@ -70,10 +70,10 @@ function Validation({ stats }: { stats: Stats }) {
               <h3 className="caps">Ablation: ranking with vs. without evidence grading</h3>
               <div className="mt-3 space-y-3">
                 {v.ablation.map((a) => (
-                  <Bar key={a.label} label={`${a.label} (positive − negative mean rank gap ${a.separation.toFixed(1)})`} value={Math.max(0, Math.min(100, a.separation * 4))} color={a.label.startsWith('With') ? 'var(--teal)' : 'var(--muted)'} />
+                  <Bar key={a.label} label={a.label} display={`gap ${a.separation.toFixed(1)} ranks`} value={Math.max(0, Math.min(100, (a.separation / Math.max(...v.ablation.map((x) => x.separation), 1)) * 100))} color={a.label.startsWith('With') ? 'var(--teal)' : 'var(--muted)'} />
                 ))}
               </div>
-              <p className="mt-2 text-xs text-muted">Larger bar = positive controls ranked further above negative controls.</p>
+              <p className="mt-2 text-xs text-muted">Gap = mean rank of negative controls minus mean rank of positive controls; a longer bar means positives sit further above negatives. Plain vote counts are a strong baseline on this small control set.</p>
             </div>
           )}
         </>
@@ -148,7 +148,7 @@ export default function Methods() {
                 <li>Every output is a <strong>hypothesis for lab testing</strong>, never a treatment claim.</li>
                 <li>No paper, PMID, dose, quote or number is invented. Missing data is shown as “unknown”, not as “no effect”.</li>
                 <li>A claim is kept only if its quote is an exact substring of the source text.</li>
-                <li>Species and study design fall back to paper-level word counts when a sentence does not state them.</li>
+                <li>Species and study design come from the claim's own quote, else the paper's dominant animal species; “human” is assigned only when the quote says so.</li>
                 <li>The corpus is small and abstract-heavy; absence of a claim is absence of extracted evidence, not evidence of absence.</li>
               </ul>
             </section>

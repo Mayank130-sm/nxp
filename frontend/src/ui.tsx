@@ -10,7 +10,10 @@ export function CountUp({ value, decimals = 0, className }: { value: number; dec
   const reduce = useReducedMotion()
   const [shown, setShown] = useState(reduce ? value : 0)
   useEffect(() => {
-    if (reduce) return setShown(value)
+    if (reduce) {
+      setShown(value)
+      return
+    }
     const c = animate(0, value, { duration: 0.6, ease: 'easeOut', onUpdate: (v) => setShown(v) })
     return () => c.stop()
   }, [value, reduce])
@@ -28,7 +31,7 @@ export function ScoreRing({ score, size = 72, stroke = 6 }: { score: number; siz
         <motion.circle
           cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={c} initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: c * (1 - score / 100) }}
-          transition={{ duration: 0.6, ease: 'easeOut' }} className="ring-glow"
+          transition={{ duration: 0.6, ease: 'easeOut' }}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center font-serif text-text" style={{ fontSize: size * 0.3 }}>
@@ -38,12 +41,12 @@ export function ScoreRing({ score, size = 72, stroke = 6 }: { score: number; siz
   )
 }
 
-export function Bar({ label, value, color = 'var(--violet)', hint }: { label: string; value: number; color?: string; hint?: string }) {
+export function Bar({ label, value, color = 'var(--violet)', hint, display }: { label: string; value: number; color?: string; hint?: string; display?: string }) {
   return (
     <div>
       <div className="mb-1.5 flex items-baseline justify-between text-sm">
         <span className="text-text">{label}</span>
-        <span className="tnum text-muted">{value.toFixed(0)}%</span>
+        <span className="tnum text-muted">{display ?? `${value.toFixed(0)}%`}</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-white/[0.07]" title={hint}>
         <motion.div className="h-full rounded-full" style={{ background: color }} initial={{ width: 0 }} animate={{ width: `${Math.min(100, value)}%` }} transition={{ duration: 0.6, ease: 'easeOut' }} />

@@ -4,15 +4,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: 'var(--ink)',
-        night: 'var(--night)',
-        surface: 'var(--surface)',
-        text: 'var(--text)',
-        muted: 'var(--muted)',
-        teal: 'var(--teal)',
-        violet: 'var(--violet)',
-        amber: 'var(--amber)',
-        coral: 'var(--coral)',
+        ink: 'rgb(var(--ink-rgb) / <alpha-value>)',
+        night: 'rgb(var(--night-rgb) / <alpha-value>)',
+        surface: 'rgb(var(--surface-rgb) / <alpha-value>)',
+        text: 'rgb(var(--text-rgb) / <alpha-value>)',
+        muted: 'rgb(var(--muted-rgb) / <alpha-value>)',
+        teal: 'rgb(var(--teal-rgb) / <alpha-value>)',
+        violet: 'rgb(var(--violet-rgb) / <alpha-value>)',
+        amber: 'rgb(var(--amber-rgb) / <alpha-value>)',
+        coral: 'rgb(var(--coral-rgb) / <alpha-value>)',
       },
       fontFamily: {
         serif: ['Fraunces', 'Cormorant Garamond', 'Georgia', 'serif'],

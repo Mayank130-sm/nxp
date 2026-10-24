@@ -9,3 +9,6 @@ data/*.db
 data/tinyfish_calls.jsonl
 node_modules/
 frontend/dist/
+data/*.log
+data/*.err
+data/*.db*

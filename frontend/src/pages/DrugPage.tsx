@@ -1,4 +1,5 @@
 import { ArrowLeft, BadgeCheck, ExternalLink, Pill, SplitSquareHorizontal } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchDrug, useAsync, type Claim, type Conflict } from '../api'
 import {
@@ -72,7 +73,8 @@ function ConflictPanel({ c }: { c: Conflict }) {
         {sides.map(([dir, claims]) => (
           <div key={dir} className="space-y-3">
             <p className="caps">{dirLabel[dir as keyof typeof dirLabel]} · {claims.length} claim{claims.length > 1 ? 's' : ''}</p>
-            {claims.slice(0, 3).map((cl) => <ClaimCard key={cl.id} c={cl} compact />)}
+            {claims.slice(0, 2).map((cl) => <ClaimCard key={cl.id} c={cl} compact />)}
+            {claims.length > 2 && <p className="text-xs text-muted">+{claims.length - 2} more in the evidence list below</p>}
           </div>
         ))}
       </div>
@@ -83,6 +85,8 @@ function ConflictPanel({ c }: { c: Conflict }) {
 export default function DrugPage() {
   const { name = '' } = useParams()
   const { data: d, error, loading } = useAsync(() => fetchDrug(name), [name])
+  const [showAll, setShowAll] = useState(false)
+  const LIMIT = 8
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -131,7 +135,14 @@ export default function DrugPage() {
                 {d.claims.length === 0 ? (
                   <Empty title="No verified claims yet" hint="Nothing in the corpus passed quote verification for this drug. Shown as unknown, not as no effect." />
                 ) : (
-                  <div className="space-y-3">{d.claims.map((c) => <ClaimCard key={c.id} c={c} />)}</div>
+                  <>
+                    <div className="space-y-3">{(showAll ? d.claims : d.claims.slice(0, LIMIT)).map((c) => <ClaimCard key={c.id} c={c} />)}</div>
+                    {d.claims.length > LIMIT && (
+                      <button onClick={() => setShowAll((v) => !v)} className="mt-4 w-full rounded-xl border border-white/10 py-2.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-text" aria-expanded={showAll}>
+                        {showAll ? 'Show fewer' : `Show all ${d.claims.length} claims`}
+                      </button>
+                    )}
+                  </>
                 )}
               </section>
             </div>

@@ -44,7 +44,11 @@ export default function GraphPage() {
     return { nodes, links }
   }, [data, focus])
 
-  useEffect(() => { const t = setTimeout(() => fg.current?.zoomToFit(500, 60), 700); return () => clearTimeout(t) }, [graph])
+  useEffect(() => {
+    const f = fg.current
+    f?.d3Force('charge')?.strength(-220)
+    f?.d3Force('link')?.distance(70)
+  }, [graph])
 
   const neighbours = useMemo(() => {
     if (!selected) return []
@@ -54,11 +58,13 @@ export default function GraphPage() {
   }, [selected, graph])
 
   const paint = useCallback((n: GNode, ctx: CanvasRenderingContext2D, scale: number) => {
-    const r = n.type === 'drug' ? 4 + (n.score ?? 0) / 14 : n.type === 'disease' ? 11 : 7
-    const color = n.type === 'drug' && n.safety_flag ? '#F0645F' : COLORS[n.type]
+    const r = n.type === 'drug' ? 3 + (n.score ?? 0) / 22 : n.type === 'disease' ? 7 : 5
+    const color = COLORS[n.type]
+    const flagged = n.type === 'drug' && n.safety_flag
     const active = hover === n.id || selected?.id === n.id
     ctx.beginPath(); ctx.arc(n.x ?? 0, n.y ?? 0, r, 0, 2 * Math.PI)
     ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = active ? 22 : 8; ctx.fill(); ctx.shadowBlur = 0
+    if (flagged) { ctx.strokeStyle = '#F0645F'; ctx.lineWidth = 2.2 / scale; ctx.stroke() }
     if (active) { ctx.strokeStyle = '#F1F0FA'; ctx.lineWidth = 1.5 / scale; ctx.stroke() }
     if (scale > 1.1 || n.type !== 'drug' || active) {
       ctx.font = `${(n.type === 'drug' ? 11 : 12) / Math.max(scale, 0.9)}px Inter, sans-serif`
@@ -82,8 +88,8 @@ export default function GraphPage() {
             ref={fg} width={size.w} height={size.h} graphData={graph} backgroundColor="rgba(0,0,0,0)"
             nodeCanvasObject={paint} nodePointerAreaPaint={(n, c, ctx) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(n.x ?? 0, n.y ?? 0, 10, 0, 2 * Math.PI); ctx.fill() }}
             nodeLabel={(n) => `${n.label}${n.score !== undefined ? ` · score ${n.score.toFixed(0)}` : ''}`}
-            linkWidth={(l) => 0.6 + l.confidence / 22} linkColor={(l) => (l.direction === 'decrease' ? 'rgba(240,100,95,0.55)' : 'rgba(154,151,196,0.4)')}
-            linkDirectionalParticles={0} cooldownTicks={120} d3VelocityDecay={0.28}
+            linkWidth={(l) => (l.type === 'ranked_for' ? 0.35 : 0.8 + l.confidence / 24)} linkColor={(l) => (l.type === 'ranked_for' ? 'rgba(154,151,196,0.07)' : l.direction === 'decrease' ? 'rgba(240,100,95,0.6)' : 'rgba(154,151,196,0.42)')}
+            linkDirectionalParticles={0} cooldownTicks={140} d3VelocityDecay={0.3} onEngineStop={() => fg.current?.zoomToFit(400, 90)}
             onNodeHover={(n) => setHover(n ? n.id : null)} onNodeClick={(n) => setSelected(n)} onBackgroundClick={() => setSelected(null)}
           />
         )}
@@ -95,7 +101,7 @@ export default function GraphPage() {
           <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
             {legend.map(([k, c]) => <li key={k} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: c, boxShadow: `0 0 8px ${c}` }} />{k}</li>)}
           </ul>
-          <p className="mt-2 text-xs text-muted">Edge thickness = confidence. Coral edges = decreases.</p>
+          <p className="mt-2 text-xs text-muted">Edge thickness = confidence. Coral edges = decreases. Coral ring = safety-flagged drug.</p>
         </div>
         <label className="card pointer-events-auto flex items-center gap-2 px-3 py-2 text-sm">
           <Crosshair size={15} className="text-muted" aria-hidden />

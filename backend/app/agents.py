@@ -27,9 +27,8 @@ LABEL_URL = "https://dailymed.nlm.nih.gov"
 
 
 def trials_goal(drug: str) -> str:
-    return (f"Search for clinical trials of '{drug}' in Alzheimer's disease or cognitive impairment. "
-            "Return JSON with up to 5 trials, each with nct_id, phase, status and condition. "
-            "Only report what the site shows; if none are found return an empty list.")
+    return (f"Search for trials of {drug} in Alzheimer's disease. Return JSON list of up to 5 trials with "
+            "nct_id, phase, status and condition, copied from the search results page.")
 
 
 def notes_goal(drug: str) -> str:
@@ -43,6 +42,8 @@ def save_trials(con: sqlite3.Connection, drug: str, result: dict[str, Any] | Non
     n = 0
     for t in (result or {}).get("trials") or []:
         if t.get("nct_id"):
+            if con.execute("SELECT 1 FROM trials WHERE drug=? AND nct_id=?", (drug, t["nct_id"])).fetchone():
+                continue
             con.execute("INSERT INTO trials(drug,nct_id,phase,status,condition,source_url) VALUES (?,?,?,?,?,?)",
                         (drug, t["nct_id"], t.get("phase"), t.get("status"), t.get("condition"),
                          f"https://clinicaltrials.gov/study/{t['nct_id']}"))
@@ -60,11 +61,11 @@ def save_notes(con: sqlite3.Connection, drug: str, result: dict[str, Any] | None
 
 
 def run_agents(con: sqlite3.Connection, drugs: list[Drug], tf: TinyFishClient,
-               n_trials: int = 20, n_notes: int = 10) -> dict[str, int]:
+               n_trials: int = 4, n_notes: int = 6) -> dict[str, int]:
     stats = {"runs": 0, "steps": 0, "trials": 0, "notes": 0, "failed": 0}
     jobs = [("trials", d) for d in drugs[:n_trials]] + [("notes", d) for d in drugs[:n_notes]]
     for kind, drug in jobs:
-        if db.is_done(con, f"agent_{kind}", drug.name):
+        if db.is_done(con, f"agent_{kind}_v2", drug.name):
             continue
         goal, url, schema = ((trials_goal(drug.name), TRIALS_URL, TRIALS_SCHEMA) if kind == "trials"
                              else (notes_goal(drug.name), LABEL_URL, NOTES_SCHEMA))
@@ -87,6 +88,6 @@ def run_agents(con: sqlite3.Connection, drugs: list[Drug], tf: TinyFishClient,
         else:
             stats["failed"] += 1
         con.commit()
-        db.mark_done(con, f"agent_{kind}", drug.name)
+        db.mark_done(con, f"agent_{kind}_v2", drug.name)
         print(f"[agents] {kind} {drug.name}: {run.get('status')} steps={run.get('num_of_steps')}")
     return stats

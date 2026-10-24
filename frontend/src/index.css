@@ -13,16 +13,25 @@
   --amber: #f2b84b;
   --coral: #f0645f;
   --line: rgba(255, 255, 255, 0.09);
+  --ink-rgb: 11 10 31;
+  --night-rgb: 21 17 46;
+  --surface-rgb: 27 23 64;
+  --text-rgb: 241 240 250;
+  --muted-rgb: 154 151 196;
+  --teal-rgb: 20 165 150;
+  --violet-rgb: 107 91 210;
+  --amber-rgb: 242 184 75;
+  --coral-rgb: 240 100 95;
 }
 
-html { scroll-behavior: smooth; }
+html { background-color: #0b0a1f; }
 
 body {
   margin: 0;
   min-height: 100vh;
   color: var(--text);
   font-family: Inter, system-ui, 'Segoe UI', sans-serif;
-  background: linear-gradient(180deg, var(--ink) 0%, var(--night) 100%) fixed;
+  background: linear-gradient(180deg, var(--ink) 0%, var(--night) 100%);
   -webkit-font-smoothing: antialiased;
 }
 

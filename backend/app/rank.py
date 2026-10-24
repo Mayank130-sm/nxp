@@ -1,4 +1,6 @@
-"""Per-drug ranking with a transparent score and a plain-language "why" string."""
+"""Per-drug ranking with a transparent score and a plain-language "why" string.
+
+score = 100*mean(top-3 pro confidences) - 80*mean(top-3 anti confidences) - conflict penalty + pathway bonus."""
 from __future__ import annotations
 
 import re
@@ -29,6 +31,13 @@ def noisy_or(confidences: list[float]) -> float:
     for c in confidences:
         p *= 1 - c / 100
     return 1 - p
+
+
+def top_mean(confidences: list[float], k: int = 3) -> float:
+    """Mean of the k strongest per-paper confidences, as 0-1. Replication is already inside each claim's
+    confidence, so quality (not claim count) drives the aggregate and the score cannot saturate."""
+    top = sorted(confidences, reverse=True)[:k]
+    return sum(top) / len(top) / 100 if top else 0.0
 
 
 def best_per_paper(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -91,7 +100,7 @@ def rank_drugs(claims: list[dict[str, Any]], categories: dict[str, str], graded:
         penalty = min(CONFLICT_CAP, sum(CONFLICT_PENALTY[c["severity"]] for c in dconf))
         paths = pathway_hits(pro)
         bonus = min(PATHWAY_BONUS_CAP, PATHWAY_BONUS * len(paths))
-        pro_p, anti_p = noisy_or([r["confidence"] for r in pro]), noisy_or([r["confidence"] for r in anti])
+        pro_p, anti_p = top_mean([r["confidence"] for r in pro]), top_mean([r["confidence"] for r in anti])
         if graded:
             score = 100 * pro_p - 100 * ANTI_WEIGHT * anti_p - penalty + (bonus if pro else 0)
         else:  # ablation: raw vote counts, no grading

@@ -71,6 +71,12 @@ def main() -> None:
               "Separation = mean rank of negative controls minus mean rank of positive controls (higher is better).", "",
               "| Method | Positives mean rank | Negatives mean rank | Separation |", "|---|---|---|---|"]
     lines += [f"| {a['label']} | {a['positives_mean_rank']} | {a['negatives_mean_rank']} | {a['separation']} |" for a in ablation]
+    g, u = ablation[0], ablation[1]
+    verdict = ("Grading widened the gap between positive and negative controls." if g["separation"] > u["separation"]
+               else "Grading did NOT widen the control gap over a plain vote count on this small control set; "
+                    "its value here is the calibrated within-drug ordering, the penalties for conflicts and "
+                    "single-paper evidence, and the per-claim explanations.")
+    lines += ["", f"**Interpretation:** {verdict}"]
     frac = out["quote_verified_fraction"]
     lines += ["", "## Quote grounding", "",
               f"- Claims proposed by the LLM: {proposed}", f"- Rejected (quote not an exact substring): {failed}",
