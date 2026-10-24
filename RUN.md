@@ -76,13 +76,13 @@ The database is a single SQLite file, `data/neurorx.db`. The code is in `backend
 
 | Table | Holds |
 |---|---|
-| `papers` | One row per paper: PMID, DOI, title, abstract, full text if fetched, source URL |
+| `papers` | One row per paper: PMID, DOI, title, year, source URL, `fulltext_available`, and `text_path` (the paper text is stored as a file, not in the database) |
 | `paper_drugs` | Which seed drugs each paper mentions |
-| `claims` | Extracted claims: drug, stage, direction, species, design, markers, dose, the verbatim quote, `quote_verified` |
-| `claim_scores` | The 0-100 confidence per claim, with its breakdown and penalties |
-| `trials` | ClinicalTrials.gov rows from the Agent (drug, NCT id, phase, status) |
-| `drug_notes` | Drug-label notes from the Agent (for example blood-brain-barrier text) |
-| `extract_stats` | Counters per drug: windows, gate passes, proposed, quote failed, verified |
+| `claims` | Extracted claims: drug, stage, direction, species, study design, markers, dose, pathways, the verbatim `evidence_quote`, `quote_verified` |
+| `claim_scores` | The 0-100 `confidence` per claim, with the replication, design, markers, species and dose parts and any `penalties` |
+| `trials` | ClinicalTrials.gov rows from the Agent (drug, NCT id, phase, status, condition) |
+| `drug_notes` | Drug-label notes from the Agent (blood-brain-barrier and safety notes) |
+| `extract_stats` | Counters per paper and drug: windows, gate passes, proposed, quote failed, kept |
 | `checkpoints` | Which stages and keys are finished, so a re-run skips them |
 
 How data flows through it:
@@ -94,6 +94,39 @@ How data flows through it:
 5. `service.py` and `main.py` (FastAPI) serve it. `scripts/export_static.py` dumps the same data to `frontend/public/data/*.json` for the hosted site.
 
 The connection uses a 60-second timeout, because an Agent job once crashed with "database is locked". The `checkpoints` table is what makes the pipeline resumable.
+
+## Query the database
+
+The database is a normal SQLite file, so any SQLite tool works. Python is already in your virtualenv:
+
+```powershell
+.venv\Scripts\python -c "import sqlite3; c=sqlite3.connect('data/neurorx.db'); print(c.execute('select drug, count(*) from claims where quote_verified=1 group by drug order by 2 desc limit 5').fetchall())"
+```
+
+For an interactive prompt, use the `sqlite3` command-line tool if you have it (`sqlite3 data/neurorx.db`), or a viewer such as DB Browser for SQLite. Open the file read-only if the pipeline might be running, because writes lock it.
+
+Useful queries:
+
+```sql
+-- verified claims for one drug, with their quotes
+select direction, stage, species, evidence_quote from claims where drug='fluoxetine' and quote_verified=1;
+
+-- strongest scored claims
+select c.drug, c.direction, s.confidence, c.evidence_quote
+from claims c join claim_scores s on s.claim_id=c.id
+order by s.confidence desc limit 10;
+
+-- papers behind a drug
+select p.pmid, p.title, p.year from papers p join paper_drugs d on d.paper_id=p.id where d.drug='lithium';
+
+-- trials the Agent found
+select drug, nct_id, phase, status from trials order by drug;
+
+-- see every table's columns
+select name from sqlite_master where type='table';
+```
+
+Do not edit `claims` or `claim_scores` by hand. `claim_scores` is rebuilt by `run_pipeline.py --stage build`, which overwrites manual changes.
 
 ## How TinyFish works and where it is used
 
