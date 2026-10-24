@@ -1,5 +1,7 @@
 # NeuroRx
 
+Live demo (static build): https://frontend-beta-flame-22.vercel.app/#/ 
+
 **An evidence-graded drug-repurposing knowledge graph for neurogenesis in Alzheimer's disease.**
 
 NeuroRx turns scattered, contradictory neurogenesis literature into a searchable graph where every drug-to-neurogenesis claim is linked to a paper, given a confidence grade, and flagged when contradicted, so labs can decide which approved drugs deserve testing.
