@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS trials (
   id INTEGER PRIMARY KEY, drug TEXT, nct_id TEXT, phase TEXT, status TEXT, condition TEXT, source_url TEXT
 );
 CREATE TABLE IF NOT EXISTS drug_notes (drug TEXT PRIMARY KEY, bbb_note TEXT, safety_note TEXT, source_url TEXT);
+CREATE TABLE IF NOT EXISTS claim_scores (
+  claim_id INTEGER PRIMARY KEY, confidence REAL, replication REAL, design REAL, markers REAL,
+  species REAL, dose REAL, penalties TEXT
+);
 CREATE TABLE IF NOT EXISTS checkpoints (stage TEXT, key TEXT, done_at TEXT, PRIMARY KEY (stage, key));
 """
 

@@ -56,3 +56,11 @@ class FakeLLM:
 
 def test_extract_window_survives_llm_errors():
     assert extract_window(FakeLLM(ValueError("bad json")), FLX, "x") is None
+
+
+def test_paper_context_counts_words():
+    from app.extract import paper_context
+    ctx = paper_context("Mice received drug. Mice were scored. Rats were not used once.", "A study")
+    assert ctx == {"species": "mouse", "study_design": "rodent"}
+    assert paper_context("A cell assay.", "t") == {"species": None, "study_design": None}
+    assert paper_context("A narrative.", "Fluoxetine: a review")["study_design"] == "review_or_meta"

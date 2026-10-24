@@ -43,6 +43,16 @@ CLAIM_SCHEMA: dict[str, Any] = {
     "required": ["has_claim", "drug", "stage", "direction", "evidence_quote"],
 }
 
+GATE_SCHEMA: dict[str, Any] = {
+    "type": "object", "properties": {"reports_effect": {"type": "boolean"}}, "required": ["reports_effect"],
+}
+GATE_SYSTEM = (
+    "Answer with JSON only. reports_effect is true only if the text explicitly states a result of the "
+    "named DRUG on neurogenesis or on neural stem/progenitor cell proliferation, survival or differentiation "
+    "(an increase, a decrease or no change). Background statements, methods, other drugs, and "
+    "speculation are false."
+)
+
 SYSTEM = (
     "You extract claims about whether a DRUG changes adult neurogenesis from scientific text. "
     "Return a single JSON object. Set has_claim=false unless the text explicitly reports an effect of the "
@@ -99,6 +109,38 @@ def build_windows(text: str, drug: Drug, max_windows: int = 12) -> list[str]:
     return out
 
 
+SPECIES_PATTERNS = {
+    "mouse": r"\b(mice|mouse|murine)\b",
+    "rat": r"\b(rats?|sprague|wistar)\b",
+    "human": r"\b(humans?|patients?|participants|volunteers|iPSC|hiPSC)\b",
+    "monkey": r"\b(monkeys?|macaques?|marmosets?|primates?)\b",
+    "zebrafish": r"\bzebrafish\b",
+}
+
+
+def paper_context(text: str, title: str = "") -> dict[str, str | None]:
+    """Deterministic paper-level species / study design from word counts (fallback when a claim sentence
+    does not state them). Only counts words present in the text; never guesses beyond that."""
+    counts = {k: len(re.findall(p, text, re.IGNORECASE)) for k, p in SPECIES_PATTERNS.items()}
+    species = max(counts, key=lambda k: counts[k]) if any(counts.values()) else None
+    if species and counts[species] < 2:
+        species = None
+    head = f"{title} {text[:600]}".lower()
+    in_vitro = len(re.findall(r"in vitro|cultured|culture|cell line|neurospheres?", text, re.IGNORECASE))
+    if re.search(r"meta-analysis|systematic review|\breview\b", head):
+        design = "review_or_meta"
+    elif species in ("mouse", "rat", "zebrafish"):
+        design = "rodent" if species != "zebrafish" else "in_vitro"
+    elif species == "monkey":
+        design = "nonhuman_primate"
+    elif species == "human":
+        design = ("human_clinical" if re.search(r"randomi[sz]ed|clinical trial|cohort|patients", text, re.IGNORECASE)
+                  else "human_cells_organoid")
+    else:
+        design = "in_vitro" if in_vitro >= 3 else None
+    return {"species": species, "study_design": design}
+
+
 def validate_claim(raw: dict[str, Any], window: str, drug: Drug) -> dict[str, Any] | None:
     """Return a clean claim dict, or None if it fails any precision check."""
     if not raw.get("has_claim") or raw.get("direction") is None:
@@ -130,6 +172,9 @@ def validate_claim(raw: dict[str, Any], window: str, drug: Drug) -> dict[str, An
 def extract_window(llm: LLM, drug: Drug, window: str) -> dict[str, Any] | None:
     prompt = f"DRUG: {drug.name}\n\nTEXT:\n{window}"
     try:
+        # pass 1: cheap yes/no (about 5 output tokens) so most windows never pay for the full JSON
+        if not llm.complete_json(GATE_SYSTEM, prompt, GATE_SCHEMA).get("reports_effect"):
+            return None
         raw = llm.complete_json(SYSTEM, prompt, CLAIM_SCHEMA)
     except (ValueError, KeyError, httpx.HTTPError) as exc:  # malformed JSON or Ollama error: skip window
         print(f"  [extract] LLM error, skipping window: {exc.__class__.__name__}")
@@ -137,7 +182,7 @@ def extract_window(llm: LLM, drug: Drug, window: str) -> dict[str, Any] | None:
     return validate_claim(raw, window, drug)
 
 
-def run_extract(con: sqlite3.Connection, drugs: list[Drug], llm: LLM, max_windows: int = 12) -> None:
+def run_extract(con: sqlite3.Connection, drugs: list[Drug], llm: LLM, max_windows: int = 6) -> None:
     by_name = {d.name: d for d in drugs}
     rows = con.execute(
         "SELECT p.id, p.text_path, pd.drug FROM papers p JOIN paper_drugs pd ON pd.paper_id=p.id "
@@ -148,11 +193,14 @@ def run_extract(con: sqlite3.Connection, drugs: list[Drug], llm: LLM, max_window
         if drug is None or db.is_done(con, "extract", key):
             continue
         text = (config.ROOT / row["text_path"]).read_text(encoding="utf-8")
+        ctx = paper_context(text, text.split(chr(10), 1)[0])
         kept = 0
         for window in build_windows(text, drug, max_windows):
             claim = extract_window(llm, drug, window)
             if claim is None:
                 continue
+            for field, value in ctx.items():
+                claim[field] = claim.get(field) or value
             claim.update(paper_id=row["id"], extractor_model=llm.model, process="neurogenesis")
             cols = ", ".join(claim)
             con.execute(f"INSERT INTO claims({cols}) VALUES ({', '.join('?' * len(claim))})",
