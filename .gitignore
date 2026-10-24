@@ -12,3 +12,6 @@ frontend/dist/
 data/*.log
 data/*.err
 data/*.db*
+
+.vercel
+.env*
