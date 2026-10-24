@@ -59,7 +59,8 @@ SYSTEM = (
     "named drug on neurogenesis, neural stem/progenitor proliferation, survival or differentiation. "
     "If the text does not state a field, return null (or [] for lists). Do not infer. "
     "evidence_quote must be copied VERBATIM from the text, one or two sentences, no edits. "
-    "direction: increase, decrease, no_effect or mixed, as stated for the drug. "
+    "direction: increase, decrease, no_effect or mixed, as stated for the drug. It is the change in the "
+    "neurogenesis measure itself (not behaviour or symptoms) and a drug that reverses a reduction is an increase. "
     "stage: proliferation, survival, differentiation, or general. "
     "markers: only markers named in the text (e.g. BrdU, Ki67, DCX, NeuN). "
     "pathways: only pathways named in the text. "
@@ -169,20 +170,40 @@ def validate_claim(raw: dict[str, Any], window: str, drug: Drug) -> dict[str, An
     }
 
 
-def extract_window(llm: LLM, drug: Drug, window: str) -> dict[str, Any] | None:
+def extract_window(llm: LLM, drug: Drug, window: str, counts: dict[str, int] | None = None
+                   ) -> dict[str, Any] | None:
+    """Two passes: cheap yes/no gate, then full extraction. `counts` tallies the funnel for validation."""
+    counts = counts if counts is not None else {}
+    bump = lambda k: counts.__setitem__(k, counts.get(k, 0) + 1)
     prompt = f"DRUG: {drug.name}\n\nTEXT:\n{window}"
+    bump("windows")
     try:
         # pass 1: cheap yes/no (about 5 output tokens) so most windows never pay for the full JSON
         if not llm.complete_json(GATE_SYSTEM, prompt, GATE_SCHEMA).get("reports_effect"):
             return None
+        bump("gate_pass")
         raw = llm.complete_json(SYSTEM, prompt, CLAIM_SCHEMA)
     except (ValueError, KeyError, httpx.HTTPError) as exc:  # malformed JSON or Ollama error: skip window
         print(f"  [extract] LLM error, skipping window: {exc.__class__.__name__}")
+        bump("errors")
         return None
-    return validate_claim(raw, window, drug)
+    if raw.get("has_claim") and raw.get("direction") is not None:
+        bump("proposed")
+        if not verify_quote(raw.get("evidence_quote"), window):
+            bump("quote_failed")
+    claim = validate_claim(raw, window, drug)
+    if claim:
+        bump("verified")
+    return claim
 
 
-def run_extract(con: sqlite3.Connection, drugs: list[Drug], llm: LLM, max_windows: int = 6) -> None:
+def is_duplicate(quote: str, seen: list[str]) -> bool:
+    """Overlapping windows repeat sentences; treat identical or containing quotes as the same claim."""
+    q = quote.lower()
+    return any(q in s or s in q for s in seen)
+
+
+def run_extract(con: sqlite3.Connection, drugs: list[Drug], llm: LLM, max_windows: int = 12) -> None:
     by_name = {d.name: d for d in drugs}
     rows = con.execute(
         "SELECT p.id, p.text_path, pd.drug FROM papers p JOIN paper_drugs pd ON pd.paper_id=p.id "
@@ -194,11 +215,12 @@ def run_extract(con: sqlite3.Connection, drugs: list[Drug], llm: LLM, max_window
             continue
         text = (config.ROOT / row["text_path"]).read_text(encoding="utf-8")
         ctx = paper_context(text, text.split(chr(10), 1)[0])
-        kept = 0
+        kept, counts, seen = 0, {}, []
         for window in build_windows(text, drug, max_windows):
-            claim = extract_window(llm, drug, window)
-            if claim is None:
+            claim = extract_window(llm, drug, window, counts)
+            if claim is None or is_duplicate(claim["evidence_quote"], seen):
                 continue
+            seen.append(claim["evidence_quote"].lower())
             for field, value in ctx.items():
                 claim[field] = claim.get(field) or value
             claim.update(paper_id=row["id"], extractor_model=llm.model, process="neurogenesis")
@@ -206,6 +228,9 @@ def run_extract(con: sqlite3.Connection, drugs: list[Drug], llm: LLM, max_window
             con.execute(f"INSERT INTO claims({cols}) VALUES ({', '.join('?' * len(claim))})",
                         list(claim.values()))
             kept += 1
+        con.execute("INSERT OR REPLACE INTO extract_stats VALUES (?,?,?,?,?,?,?)",
+                    (row["id"], row["drug"], counts.get("windows", 0), counts.get("gate_pass", 0),
+                     counts.get("proposed", 0), counts.get("quote_failed", 0), kept))
         con.commit()
         db.mark_done(con, "extract", key)
         print(f"[extract] paper {row['id']} / {row['drug']}: {kept} claims")

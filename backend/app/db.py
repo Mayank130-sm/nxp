@@ -28,6 +28,10 @@ CREATE TABLE IF NOT EXISTS claim_scores (
   claim_id INTEGER PRIMARY KEY, confidence REAL, replication REAL, design REAL, markers REAL,
   species REAL, dose REAL, penalties TEXT
 );
+CREATE TABLE IF NOT EXISTS extract_stats (
+  paper_id INTEGER, drug TEXT, windows INTEGER, gate_pass INTEGER, proposed INTEGER,
+  quote_failed INTEGER, kept INTEGER, PRIMARY KEY (paper_id, drug)
+);
 CREATE TABLE IF NOT EXISTS checkpoints (stage TEXT, key TEXT, done_at TEXT, PRIMARY KEY (stage, key));
 """
 
@@ -35,7 +39,7 @@ CREATE TABLE IF NOT EXISTS checkpoints (stage TEXT, key TEXT, done_at TEXT, PRIM
 def connect(path: Path | None = None) -> sqlite3.Connection:
     p = path or config.DB_PATH
     p.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(p)
+    con = sqlite3.connect(p, timeout=60)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
     return con

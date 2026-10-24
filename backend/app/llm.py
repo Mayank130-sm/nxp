@@ -29,6 +29,7 @@ class OllamaLLM:
             json={
                 "model": self.model,
                 "stream": False,
+                "think": False,  # skip reasoning tokens; the schema constrains the answer
                 "format": schema,  # structured outputs: constrain to JSON schema
                 "options": {"temperature": 0},
                 "messages": [
