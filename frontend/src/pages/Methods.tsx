@@ -89,7 +89,7 @@ function Validation({ stats }: { stats: Stats }) {
           {ev && typeof ev.claim_detection === 'object' ? (
             <p className="mt-1 font-serif text-3xl">P {(ev.claim_detection.precision * 100).toFixed(0)}% · R {(ev.claim_detection.recall * 100).toFixed(0)}%</p>
           ) : <p className="mt-1 font-serif text-3xl text-muted">unknown</p>}
-          <p className="mt-1 text-xs text-muted">{ev ? `n = ${ev.n_gold as number} sentences, labelled by Claude (not a human annotator); direction F1 ${typeof ev.direction === 'object' ? (ev.direction.f1 * 100).toFixed(0) : '?'}%` : 'Gold set not labelled yet.'}</p>
+          <p className="mt-1 text-xs text-muted">{ev ? `n = ${ev.n_gold as number} sentences, labelled by two AI annotators, adjudicated (not human); direction F1 ${typeof ev.direction === 'object' ? (ev.direction.f1 * 100).toFixed(0) : '?'}%` : 'Gold set not labelled yet.'}</p>
         </div>
       </div>
     </section>

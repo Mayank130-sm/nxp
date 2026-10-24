@@ -84,7 +84,7 @@ def main() -> None:
               f"- Claims kept after de-duplication: {verified_n}", ""]
     ev = config.RESULTS_DIR / "extraction_eval.json"
     lines += ["## Extraction vs. gold set", ""]
-    lines += ["The 100 gold sentences were labelled by Claude (an AI), not an independent human annotator, so treat",
+    lines += ["The 100 gold sentences were labelled by two AI annotators (blind second pass, kappa 0.72, adjudicated), not human annotators, so treat",
               "these as a sanity check and replace them with human labels for a publishable number. Species and",
               "study-design precision is low by construction: the gold labels only what the sentence states,",
               "while the pipeline deliberately falls back to the paper's dominant animal species.", ""]

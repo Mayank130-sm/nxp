@@ -34,7 +34,7 @@ Separation = mean rank of negative controls minus mean rank of positive controls
 
 ## Extraction vs. gold set
 
-The 100 gold sentences were labelled by Claude (an AI), not an independent human annotator, so treat
+The 100 gold sentences were labelled by two AI annotators (blind second pass, kappa 0.72, adjudicated), not human annotators, so treat
 these as a sanity check and replace them with human labels for a publishable number. Species and
 study-design precision is low by construction: the gold labels only what the sentence states,
 while the pipeline deliberately falls back to the paper's dominant animal species.
@@ -43,8 +43,8 @@ while the pipeline deliberately falls back to the paper's dominant animal specie
 {
   "claim_detection": {
     "precision": 0.889,
-    "recall": 0.976,
-    "f1": 0.93
+    "recall": 0.889,
+    "f1": 0.889
   },
   "n_gold": 100,
   "direction": {
@@ -53,19 +53,19 @@ while the pipeline deliberately falls back to the paper's dominant animal specie
     "f1": 0.975
   },
   "stage": {
-    "precision": 0.95,
-    "recall": 0.95,
-    "f1": 0.95
+    "precision": 0.925,
+    "recall": 0.925,
+    "f1": 0.925
   },
   "species": {
-    "precision": 0.455,
+    "precision": 0.5,
     "recall": 1.0,
-    "f1": 0.625
+    "f1": 0.667
   },
   "study_design": {
-    "precision": 0.486,
-    "recall": 0.944,
-    "f1": 0.642
+    "precision": 0.471,
+    "recall": 0.941,
+    "f1": 0.627
   }
 }
 ```
