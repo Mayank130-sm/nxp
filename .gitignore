@@ -12,6 +12,8 @@ frontend/dist/
 data/*.log
 data/*.err
 data/*.db*
+!data/neurorx.db
+data/*.backup*.db
 
 .vercel
 .env*
