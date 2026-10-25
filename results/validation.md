@@ -6,13 +6,13 @@ All numbers are computed from the database by `scripts/validate.py`.
 
 | Drug | Kind | Expected | Observed | Score | Match |
 |---|---|---|---|---|---|
-| fluoxetine | positive | pro-neurogenic evidence | 18 papers increase / 1 decrease | 17 | yes |
-| lithium | positive | pro-neurogenic evidence | 12 papers increase / 0 decrease | 58 | yes |
-| metformin | positive | pro-neurogenic evidence | 27 papers increase / 3 decrease | 19 | yes |
-| memantine | positive | pro-neurogenic evidence | 16 papers increase / 0 decrease | 57 | yes |
-| dexamethasone | negative | suppression / safety flag | 0 papers increase / 3 decrease, safety flag | 0 | yes |
-| morphine | negative | suppression / safety flag | 9 papers increase / 16 decrease, safety flag | 0 | yes |
-| ethanol | negative | suppression / safety flag | 7 papers increase / 12 decrease | 0 | yes |
+| fluoxetine | positive | pro-neurogenic evidence | 25 papers increase / 1 decrease | 17 | yes |
+| lithium | positive | pro-neurogenic evidence | 22 papers increase / 2 decrease | 27 | yes |
+| metformin | positive | pro-neurogenic evidence | 40 papers increase / 4 decrease | 20 | yes |
+| memantine | positive | pro-neurogenic evidence | 26 papers increase / 0 decrease | 57 | yes |
+| dexamethasone | negative | suppression / safety flag | 0 papers increase / 9 decrease, safety flag | 0 | yes |
+| morphine | negative | suppression / safety flag | 10 papers increase / 19 decrease, safety flag | 0 | yes |
+| ethanol | negative | suppression / safety flag | 7 papers increase / 20 decrease, safety flag | 0 | yes |
 
 ## Ablation: ranking with vs. without evidence grading
 
@@ -20,17 +20,17 @@ Separation = mean rank of negative controls minus mean rank of positive controls
 
 | Method | Positives mean rank | Negatives mean rank | Separation |
 |---|---|---|---|
-| With evidence grading | 13.25 | 26.0 | 12.75 |
-| Without grading (vote count) | 10.38 | 26.5 | 16.12 |
+| With evidence grading | 14.5 | 25.0 | 10.5 |
+| Without grading (vote count) | 12.12 | 26.5 | 14.38 |
 
 **Interpretation:** Grading did NOT widen the control gap over a plain vote count on this small control set; its value here is the calibrated within-drug ordering, the penalties for conflicts and single-paper evidence, and the per-claim explanations.
 
 ## Quote grounding
 
-- Claims proposed by the LLM: 1235
-- Rejected (quote not an exact substring): 22
-- Fraction with verified quote at proposal time: 0.982
-- Claims kept after de-duplication: 1003
+- Claims proposed by the LLM: 1614
+- Rejected (quote not an exact substring): 24
+- Fraction with verified quote at proposal time: 0.985
+- Claims kept after de-duplication: 1288
 
 ## Extraction vs. gold set
 

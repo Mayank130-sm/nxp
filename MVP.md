@@ -136,13 +136,13 @@ Key design choices:
 
 | Question | Finding |
 |---|---|
-| Can we get the literature? | Yes. PubMed gives abstracts for all 28 drugs; TinyFish Fetch gave full text for 252 papers. Paywalled papers stay abstract-only. |
-| Can an LLM extract usable claims? | Yes, with guardrails. 1,235 claims proposed, 98.2% had a quote that verified exactly. |
+| Can we get the literature? | Yes. PubMed gives abstracts for all 28 drugs; TinyFish Fetch gave full text for 298 papers. Paywalled papers stay abstract-only. |
+| Can an LLM extract usable claims? | Yes, with guardrails. 1,614 claims proposed, 98.5% had a quote that verified exactly. |
 | Is extraction fast enough? | Yes after changes. CPU runs took 20-40 s per call. A GPU server, a cheap gate pass and `think: false` brought calls to about 1 s. |
 | Can we reach sites with no API? | Partly. TinyFish Agent returned trial lists and label notes for most drugs; some runs time out or return nothing (sildenafil has no trial list). |
 | Does grading add value over vote counts? | Not on control separation. On this small control set a plain vote count separated controls better than the grading. The value is the per-claim explanation and the conflict and single-lab penalties. Reported honestly on the Methods page. |
 | Can it run without a backend? | Yes. Static JSON export plus HashRouter deploys as a plain static site. |
-| Cost and limits | TinyFish Search 30 req/min (free up to 12k/day), Fetch 150 URLs/min (1000/day free), Agent run cap of 30 per process. 208 live TinyFish calls used in total. |
+| Cost and limits | TinyFish Search 30 req/min (free up to 12k/day), Fetch 150 URLs/min (1000/day free), Agent run cap of 30 per process. 240 live TinyFish calls used in total. |
 
 **Main risks**
 - Small corpus, mostly abstracts, so "no claim" means "no extracted evidence".
@@ -178,21 +178,21 @@ Key design choices:
 
 | Metric | Value |
 |---|---|
-| Papers processed | 1,176 (252 with full text), 386 with at least one claim |
-| Verified claims | 1,003 (98.2% of proposed claims had an exact quote) |
+| Papers processed | 1,536 (298 with full text), 521 with at least one claim |
+| Verified claims | 1,288 (98.5% of proposed claims had an exact quote) |
 | Drugs | 28 seeded, 28 scored |
-| Conflicts flagged | 40 |
+| Conflicts flagged | 45 |
 | Controls recovered | 7 of 7 (6 of 7 on the first, smaller corpus) |
-| TinyFish live calls | 208 (search 85, fetch 57, agent 66) |
+| TinyFish live calls | 240 (search 85, fetch 89, agent 66) |
 | Tests | 27 passing, ruff clean |
 | Extraction vs gold set | claim detection precision 89% / recall 89% (n=100); direction F1 97.5%; stage F1 92.5%; species precision 50%; study design precision 47% |
 | Gold-set agreement | Two AI annotators, Cohen's kappa 0.72 on claim detection (86/100 raw), disagreements adjudicated by Claude |
 
 **Known limits (also stated in the README and on the Methods page)**
 1. The gold set was labelled by AI, not by a human. Treat the extraction numbers as a sanity check and have a person relabel `data/labels/gold_sentences.csv` before quoting them as a result.
-2. Dexamethasone found no attributable evidence on the first corpus, because its papers discuss glucocorticoids as a class. It was not tuned for; it was recovered (3 decreasing papers, safety flag) only after ingesting more papers. Fluoxetine and metformin, both positive controls, still score low (17 and 19) despite mostly pro papers. The cause has not been investigated.
+2. Dexamethasone found no attributable evidence on the first corpus, because its papers discuss glucocorticoids as a class. It was not tuned for; it was recovered (9 decreasing papers, safety flag) only after ingesting more papers. Fluoxetine and metformin, both positive controls, still score low (17 and 20) despite mostly pro papers. Lithium fell from 58 to 27 and ketamine, resveratrol and valproic acid now score near zero as more papers were added; the causes have not been investigated.
 3. Sildenafil has no trial list: its Agent lookup completed on a retry with a longer timeout but returned no trials. A missing trial list means "not retrieved", not "no trials exist".
-4. Grading does not beat a plain vote count on control separation (gap 12.75 vs 16.12 on the larger corpus).
+4. Grading does not beat a plain vote count on control separation (gap 10.5 vs 14.38 on the larger corpus, so the vote count now wins by more).
 5. Independent papers are distinct papers; shared-lab authorship is not detected.
 
 **Next steps if continued**
