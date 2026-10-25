@@ -95,6 +95,36 @@ How data flows through it:
 
 The connection uses a 60-second timeout, because an Agent job once crashed with "database is locked". The `checkpoints` table is what makes the pipeline resumable.
 
+## Get more papers (flags)
+
+`run_pipeline.py` takes the paper counts as flags, so you do not need to edit code:
+
+```powershell
+# more papers for every drug, re-doing ingest for them (back up data
+eurorx.db first)
+.venv\Scripts\python scripts/run_pipeline.py --stage ingest --reingest --pubmed-n 40 --fulltext-n 10
+.venv\Scripts\python scripts/run_pipeline.py --stage extract    # only the new papers are read
+.venv\Scripts\python scripts/run_pipeline.py --stage build
+```
+
+- `--pubmed-n` is PubMed papers per drug (default 14). `--fulltext-n` is full-text fetches per drug (default 4).
+- `--reingest` clears the ingest checkpoints for the selected drugs. Without it, finished drugs are skipped.
+- `--drugs a,b` limits any stage to those drugs.
+- Papers are merged by PMID, DOI and title, so re-ingesting does not create duplicates.
+- Set `TINYFISH_TIMEOUT=400` (seconds) in the environment if Agent runs time out. The default is 150.
+
+## Human labels for the gold set
+
+```powershell
+.venv\Scripts\python scripts/make_human_sheet.py                       # writes data\labels\gold_human_blank.csv, sentences only
+# a person fills has_claim (1/0) and the other columns, then saves it as data\labels\gold_human.csv
+.venv\Scripts\python scripts/make_human_sheet.py --compare data\labels\gold_human.csv   # agreement with the AI labels (Cohen kappa)
+.venv\Scripts\python scripts/eval_extraction.py --gold data\labels\gold_human.csv --out results\extraction_eval.json
+.venv\Scripts\python scripts/run_pipeline.py --stage build
+```
+
+The blank sheet has no AI labels, so the annotator is not anchored by them. The labelling rule and the allowed values are in the header of `scripts/make_human_sheet.py`. Until a human file exists, the extraction numbers stay labelled as AI-made.
+
 ## Query the database
 
 The database is a normal SQLite file, so any SQLite tool works. Python is already in your virtualenv:

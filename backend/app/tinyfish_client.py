@@ -63,7 +63,7 @@ class TinyFishClient:
         self.call_log = call_log or config.CALL_LOG
         self.max_retries = max_retries
         self._sleep = sleep
-        self._http = httpx.Client(transport=transport, timeout=httpx.Timeout(150.0, connect=15.0))
+        self._http = httpx.Client(transport=transport, timeout=httpx.Timeout(config.HTTP_TIMEOUT, connect=15.0))
         self._search_bucket = TokenBucket(config.SEARCH_PER_MIN)
         self._fetch_bucket = TokenBucket(config.FETCH_URLS_PER_MIN)
         self.agent_runs = 0

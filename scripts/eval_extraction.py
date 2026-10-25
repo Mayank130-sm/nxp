@@ -4,7 +4,9 @@ A predicted claim is matched to a gold row when it has the same paper_id and dru
 quote lies inside the gold sentence window. Has-claim is scored as a detection task; every other
 field is scored only on rows where both sides state a value.
 """
+import argparse
 import csv
+import io
 import json
 import sys
 from pathlib import Path
@@ -24,7 +26,12 @@ def prf(tp: int, fp: int, fn: int) -> dict[str, float]:
 
 
 def main() -> None:
-    gold = [r for r in csv.DictReader((config.DATA_DIR / "labels" / "gold_sentences.csv").open(encoding="utf-8"))
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--gold", default=str(config.DATA_DIR / "labels" / "gold_sentences.csv"),
+                    help="labelled CSV (default: the AI-made gold set; pass the human-labelled file when you have it)")
+    ap.add_argument("--out", default=str(config.RESULTS_DIR / "extraction_eval.json"))
+    args = ap.parse_args()
+    gold = [r for r in csv.DictReader(io.StringIO(Path(args.gold).read_text(encoding="utf-8")))
             if r["has_claim"].strip() in ("0", "1")]
     if not gold:
         sys.exit("No labelled rows yet: fill has_claim (1/0) in data/labels/gold_sentences.csv")
@@ -61,7 +68,7 @@ def main() -> None:
                     counts[f][1] += 1
     report = {"claim_detection": prf(tp, fp, fn), "n_gold": len(gold)}
     report.update({f: prf(*counts[f]) for f in FIELDS})
-    out = config.RESULTS_DIR / "extraction_eval.json"
+    out = Path(args.out)
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))

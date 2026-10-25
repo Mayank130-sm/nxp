@@ -25,6 +25,7 @@ SEARCH_PER_MIN = 30  # docs: 30 req/min per key
 FETCH_URLS_PER_MIN = 150  # docs: 150 URLs/min per key
 FETCH_BATCH_MAX = 10  # docs: up to 10 URLs per request
 AGENT_RUN_CAP = int(os.getenv("AGENT_RUN_CAP", "30"))
+HTTP_TIMEOUT = float(os.getenv("TINYFISH_TIMEOUT", "150"))  # seconds; raise for slow Agent runs
 
 # --- Ollama ---
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b-instruct")
